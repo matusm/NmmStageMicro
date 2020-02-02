@@ -6,6 +6,9 @@ namespace NmmStageMicro
 {
     class Options
     {
+        [Option('s', "scan", DefaultValue = 0, HelpText = "Scan index for multi-scan files.")]
+        public int ScanIndex { get; set; }
+
         [Option('X', "X-axis", DefaultValue = "XYvec", HelpText = "Channel used as x-axis")]
         public string Xaxis { get; set; }
 
@@ -34,16 +37,16 @@ namespace NmmStageMicro
         public double fThre { get; set; }
 
         [Option('q', "quiet", HelpText = "Quiet mode. No screen output (except for errors).")]
-        public bool Quiet { get; set; }
+        public bool BeQuiet { get; set; }
 
         [Option("heydemann", HelpText = "Perform Heydemann correction.")]
         public bool Heyde { get; set; }
 
         [Option("back", HelpText = "Use backtrace profile (when present).")]
-        public bool bBack { get; set; }
+        public bool UseBack { get; set; }
 
         [Option("both", HelpText = "Mean of forward and backtrace profile (when present).")]
-        public bool bBoth { get; set; }
+        public bool UseBoth { get; set; }
 
 
         [ValueList(typeof(List<string>), MaximumElements = 2)]
