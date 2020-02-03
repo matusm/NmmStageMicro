@@ -84,6 +84,9 @@ namespace NmmStageMicro
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] *= 1.0e6;
+                int[] luminance = new int[zData.Length];
+                for (int i = 0; i < xData.Length; i++)
+                    luminance[i] = (int)zData[i];
 
             }
 
