@@ -12,6 +12,8 @@ namespace NmmStageMicro
         static NmmScanData theData;
         static TopographyProcessType topographyProcessType;
         static string[] fileNames;
+        static double[] xData;
+        static double[] zData;
 
         public static void Main(string[] args)
         {
@@ -39,6 +41,13 @@ namespace NmmStageMicro
             ConsoleUI.Done();
             ConsoleUI.WriteLine();
 
+
+            // Check if requested channels present in raw data
+            if (!theData.ColumnPresent(options.XAxisDesignation))
+                ConsoleUI.ErrorExit($"!Channel {options.XAxisDesignation} not in data files", 2);
+            if (!theData.ColumnPresent(options.ZAxisDesignation))
+                ConsoleUI.ErrorExit($"!Channel {options.ZAxisDesignation} not in data files", 3);
+
             topographyProcessType = TopographyProcessType.ForwardOnly;
             if (options.UseBack)
                 topographyProcessType = TopographyProcessType.BackwardOnly;
@@ -51,14 +60,41 @@ namespace NmmStageMicro
                 topographyProcessType = TopographyProcessType.ForwardOnly;
             }
             if (theData.MetaData.ScanStatus == ScanDirectionStatus.Unknown)
-                ConsoleUI.ErrorExit("!Unknown scan type", 2);
+                ConsoleUI.ErrorExit("!Unknown scan type", 4);
             if (theData.MetaData.ScanStatus == ScanDirectionStatus.NoData)
-                ConsoleUI.ErrorExit("!No scan data present", 3);
+                ConsoleUI.ErrorExit("!No scan data present", 5);
 
+            // some screen output
+            ConsoleUI.WriteLine();
+            ConsoleUI.WriteLine($"{theData.MetaData.NumberOfDataPoints} data lines with {theData.MetaData.NumberOfColumnsInFile} channels, organized in {theData.MetaData.NumberOfProfiles} profiles");
+            ConsoleUI.WriteLine($"x-axis channel: {options.XAxisDesignation}");
+            ConsoleUI.WriteLine($"z-axis channel: {options.ZAxisDesignation}");
+            ConsoleUI.WriteLine($"threshold: {options.Threshold}");
+            ConsoleUI.WriteLine($"morphological filter parameter: {options.Morpho}");
+            ConsoleUI.WriteLine($"trace: {topographyProcessType}");
+            ConsoleUI.WriteLine($"expected number of line marks: {options.ExpectedTargets}");
+            ConsoleUI.WriteLine($"nominal scale division: {options.NominalDivision} um");
+            ConsoleUI.WriteLine();
 
+            // here comes the loop over all profiles
+            for (int profileIndex = 1; profileIndex <= theData.MetaData.NumberOfProfiles; profileIndex++)
+            {
+                xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex, topographyProcessType);
+                zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex, topographyProcessType);
+                // convert Xdata from meter to micrometer
+                for (int i = 0; i < xData.Length; i++)
+                    xData[i] *= 1.0e6;
 
+            }
 
 
         }
+    }
+
+    enum ScaleMarkType
+    {
+        Unknown,
+        Transparent,
+        Reflective
     }
 }

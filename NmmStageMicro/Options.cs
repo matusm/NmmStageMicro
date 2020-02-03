@@ -9,11 +9,11 @@ namespace NmmStageMicro
         [Option('s', "scan", DefaultValue = 0, HelpText = "Scan index for multi-scan files.")]
         public int ScanIndex { get; set; }
 
-        [Option('X', "X-axis", DefaultValue = "XYvec", HelpText = "Channel used as x-axis")]
-        public string Xaxis { get; set; }
+        [Option('X', "X-axis", DefaultValue = "XYvec", HelpText = "Channel for x-axis")]
+        public string XAxisDesignation { get; set; }
 
-        [Option('Z', "Z-axis", DefaultValue = "AX", HelpText = "Channel used as z-axis")]
-        public string Zaxis { get; set; }
+        [Option('Z', "Z-axis", DefaultValue = "AX", HelpText = "Channel for z-axis (brightness)")]
+        public string ZAxisDesignation { get; set; }
 
         [Option("precision", DefaultValue = 2, HelpText = "Decimal digits for results")]
         public int iPrecision { get; set; }
@@ -31,15 +31,15 @@ namespace NmmStageMicro
         public double Alpha { get; set; }
 
         [Option('m', "morpho", DefaultValue = 25, HelpText = "Kernel value of morphological filter.")]
-        public int iMorpho { get; set; }
+        public int Morpho { get; set; }
 
         [Option('t', "threshold", DefaultValue = 0.5, HelpText = "Threshold value for line detection.")]
-        public double fThre { get; set; }
+        public double Threshold { get; set; }
 
         [Option('q', "quiet", HelpText = "Quiet mode. No screen output (except for errors).")]
         public bool BeQuiet { get; set; }
 
-        [Option("back", HelpText = "Use backtrace profile (when present).")]
+        [Option("back", HelpText = "Use backtrace profile only (when present).")]
         public bool UseBack { get; set; }
 
         [Option("both", HelpText = "Mean of forward and backtrace profile (when present).")]
