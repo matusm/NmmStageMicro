@@ -19,16 +19,16 @@ namespace NmmStageMicro
         public int iPrecision { get; set; }
 
         [Option('d', "div", DefaultValue = 0, HelpText = "Nominal scale division in um")]
-        public double fDiv { get; set; }
+        public double NominalDivision { get; set; }
 
         [Option('n', "nlines", DefaultValue = 0, HelpText = "Expected number of line marks.")]
-        public int expcTargets { get; set; }
+        public int ExpectedTargets { get; set; }
 
-        [Option('r', "reference", DefaultValue = 0, HelpText = "Line # to reference to.")]
-        public int iRef { get; set; }
+        [Option('r', "reference", DefaultValue = 0, HelpText = "Line mark # to reference to.")]
+        public int RefLine { get; set; }
 
         [Option("alpha", DefaultValue = 0.0, HelpText = "Thermal expansion coefficient in 1/K")]
-        public double alpha { get; set; }
+        public double Alpha { get; set; }
 
         [Option('m', "morpho", DefaultValue = 25, HelpText = "Kernel value of morphological filter.")]
         public int iMorpho { get; set; }
@@ -38,9 +38,6 @@ namespace NmmStageMicro
 
         [Option('q', "quiet", HelpText = "Quiet mode. No screen output (except for errors).")]
         public bool BeQuiet { get; set; }
-
-        [Option("heydemann", HelpText = "Perform Heydemann correction.")]
-        public bool Heyde { get; set; }
 
         [Option("back", HelpText = "Use backtrace profile (when present).")]
         public bool UseBack { get; set; }

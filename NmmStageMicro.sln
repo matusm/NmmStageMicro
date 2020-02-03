@@ -1,6 +1,7 @@
-
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29509.3
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NmmStageMicro", "NmmStageMicro\NmmStageMicro.csproj", "{A3D56A37-1D22-48D0-9D3D-88BB03F52231}"
 EndProject
 Global
@@ -9,9 +10,15 @@ Global
 		Release|anycpu = Release|anycpu
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Debug|anycpu.ActiveCfg = Debug|anycpu
-		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Debug|anycpu.Build.0 = Debug|anycpu
-		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Release|anycpu.ActiveCfg = Release|anycpu
-		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Release|anycpu.Build.0 = Release|anycpu
+		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Debug|anycpu.ActiveCfg = Debug|Any CPU
+		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Debug|anycpu.Build.0 = Debug|Any CPU
+		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Release|anycpu.ActiveCfg = Release|Any CPU
+		{A3D56A37-1D22-48D0-9D3D-88BB03F52231}.Release|anycpu.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1DAED3CF-4E25-4E56-AD2A-A76E62EF70DC}
 	EndGlobalSection
 EndGlobal
