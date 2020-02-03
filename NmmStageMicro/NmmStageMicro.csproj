@@ -40,6 +40,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConsoleUI.cs" />
     <Compile Include="Options.cs" />
+    <Compile Include="IntensityEvaluator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

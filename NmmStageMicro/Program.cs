@@ -87,10 +87,9 @@ namespace NmmStageMicro
                 int[] luminance = new int[zData.Length];
                 for (int i = 0; i < xData.Length; i++)
                     luminance[i] = (int)zData[i];
+                IntensityEvaluator eval = new IntensityEvaluator(luminance);
 
             }
-
-
         }
     }
 
