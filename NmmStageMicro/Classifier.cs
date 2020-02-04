@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace NmmStageMicro
+﻿namespace NmmStageMicro
 {
     class Classifier
     {
@@ -27,13 +21,6 @@ namespace NmmStageMicro
             }
             return skeleton;
         }
-
-        public List<double> GetLeftEdges()
-        {
-
-        }
-
-
 
         private int[] intensity;
 

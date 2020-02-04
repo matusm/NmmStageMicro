@@ -1,30 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NmmStageMicro
 {
     class MarkFinder
     {
+
         public MarkFinder(int[] skeleton, double[] xData)
         {
             this.skeleton = skeleton;
             this.xData = xData;
-            EdgeFinder();
+            // first detect edges
+            EdgeDetector();
+            // find line marks from the edges
+            LineFinder();
         }
 
-        private void EdgeFinder()
+        public ScaleMarkType MarkType { get; private set; } = ScaleMarkType.Unknown;
+        public List<double> LeftEdgePositions { get; private set; } = new List<double>();
+        public List<double> RightEdgePositions { get; private set; } = new List<double>();
+        public List<double> LineCenterPositions { get; private set; } = new List<double>();
+        public List<double> LineWidths { get; private set; } = new List<double>();
+
+        private void EdgeDetector()
         {
-
-            throw new NotImplementedException();
+            for (int i = 1; i < skeleton.Length; i++)
+            {
+                if (skeleton[i - 1] == 0 && skeleton[i] == 1)
+                    LeftEdgePositions.Add((xData[i - 1] + xData[i]) / 2.0);
+                if (skeleton[i - 1] == 1 && skeleton[i] == 0)
+                    RightEdgePositions.Add((xData[i - 1] + xData[i]) / 2.0);
+            }
         }
 
-        private List<double> leftEdges;
+        private void LineFinder()
+        {
+            if (LeftEdgePositions.Count != RightEdgePositions.Count) return;
+            if (LeftEdgePositions.Count == 0) return;
+            for (int i = 0; i < LeftEdgePositions.Count; i++)
+            {
+                double position = (LeftEdgePositions[i] + RightEdgePositions[i]) / 2.0;
+                double width = Math.Abs(LeftEdgePositions[i] - RightEdgePositions[i]);
+                LineCenterPositions.Add(position);
+                LineWidths.Add(width);
+                if (LeftEdgePositions[i] < RightEdgePositions[i])
+                    MarkType = ScaleMarkType.Reflective;
+                else
+                    MarkType = ScaleMarkType.Transparent;
+            }
+        }
 
         private int[] skeleton;
         private double[] xData;
 
     }
+
+    enum ScaleMarkType
+    {
+        Unknown,
+        NoMark,
+        Transparent,
+        Reflective
+    }
+
 }

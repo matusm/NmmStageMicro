@@ -43,6 +43,7 @@
     <Compile Include="ConsoleUI.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="IntensityEvaluator.cs" />
+    <Compile Include="MorphoFilter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

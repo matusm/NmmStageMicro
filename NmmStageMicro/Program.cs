@@ -87,7 +87,7 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine($"({relativeSpan:F1} % of full range)");
             ConsoleUI.WriteLine();
 
-            // here comes the loop over all profiles
+            // the loop over all profiles
             for (int profileIndex = 1; profileIndex <= theData.MetaData.NumberOfProfiles; profileIndex++)
             {
                 xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex, topographyProcessType);
@@ -95,9 +95,15 @@ namespace NmmStageMicro
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] *= 1.0e6;
-                int[] luminance = DoubleToInt(zData);
-
-                //ConsoleUI.WriteLine($"profile: {profileIndex}");
+                // generate black/white profile
+                Classifier classifier = new Classifier(DoubleToInt(zData));
+                int[] skeleton = classifier.GetSkeleton(options.Threshold, eval.LowerBound, eval.UpperBound);
+                // morphological filter
+                MorphoFilter filter = new MorphoFilter(skeleton);
+                
+                // find line marks
+                MarkFinder marks = new MarkFinder(skeleton, xData);
+                ConsoleUI.WriteLine($"profile: {profileIndex} with {marks.LineCenterPositions.Count} line marks");
             }
         }
 
@@ -113,10 +119,4 @@ namespace NmmStageMicro
 
     }
 
-    enum ScaleMarkType
-    {
-        Unknown,
-        Transparent,
-        Reflective
-    }
 }
