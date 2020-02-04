@@ -39,7 +39,6 @@ namespace NmmStageMicro
             nmmFileNameObject.SetScanIndex(options.ScanIndex);
             theData = new NmmScanData(nmmFileNameObject);
             ConsoleUI.Done();
-            ConsoleUI.WriteLine();
 
 
             // Check if requested channels present in raw data
@@ -76,6 +75,18 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine($"nominal scale division: {options.NominalDivision} um");
             ConsoleUI.WriteLine();
 
+            // evaluate the intensities for ALL profiles
+            ConsoleUI.StartOperation("Classifying intensity data");
+            double[] luminanceField = theData.ExtractProfile(options.ZAxisDesignation, 0, topographyProcessType);
+            IntensityEvaluator eval = new IntensityEvaluator(DoubleToInt(luminanceField));
+            ConsoleUI.Done();
+            ConsoleUI.WriteLine();
+            ConsoleUI.WriteLine($"intensity range from {eval.MinIntensity} to {eval.MaxIntensity}");
+            ConsoleUI.WriteLine($"estimated bounds from {eval.LowerBound} to {eval.UpperBound}");
+            double relativeSpan = (double)(eval.UpperBound - eval.LowerBound) / (double)(eval.MaxIntensity - eval.MinIntensity) * 100.0;
+            ConsoleUI.WriteLine($"({relativeSpan:F1} % of full range)");
+            ConsoleUI.WriteLine();
+
             // here comes the loop over all profiles
             for (int profileIndex = 1; profileIndex <= theData.MetaData.NumberOfProfiles; profileIndex++)
             {
@@ -84,13 +95,22 @@ namespace NmmStageMicro
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] *= 1.0e6;
-                int[] luminance = new int[zData.Length];
-                for (int i = 0; i < xData.Length; i++)
-                    luminance[i] = (int)zData[i];
-                IntensityEvaluator eval = new IntensityEvaluator(luminance);
+                int[] luminance = DoubleToInt(zData);
 
+                //ConsoleUI.WriteLine($"profile: {profileIndex}");
             }
         }
+
+        private static int[] DoubleToInt(double[] rawIntensities)
+        {
+            int[] result = new int[rawIntensities.Length];
+            for (int i = 0; i < result.Length; i++)
+            {
+                result[i] = (int)rawIntensities[i];
+            }
+            return result;
+        }
+
     }
 
     enum ScaleMarkType

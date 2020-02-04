@@ -4,34 +4,48 @@ namespace NmmStageMicro
 {
     public class IntensityEvaluator
     {
-
+        #region Ctor
         public IntensityEvaluator(int[] intensities)
         {
             this.intensities = intensities;
-            intensityRange = MaxIntensity - MinIntensity;
+            maxIntensity = intensities.Max();
+            minIntensity = intensities.Min();
+            intensityRange = maxIntensity - minIntensity;
             CreateHistogram();
+            // CreateHistogram must be called in advance
+            lowerBound = FindPeak(0.0, 0.5);
+            upperBound = FindPeak(0.5, 1.0);
         }
+        #endregion
 
-        public int MaxIntensity { get { return intensities.Max(); } }
+        #region Properties
+        public int MaxIntensity { get { return maxIntensity; } }
 
-        public int MinIntensity { get { return intensities.Min(); } }
+        public int MinIntensity { get { return minIntensity; } }
 
-        public int LowerBound { get { return FindPeak(0.0, 0.5); } }
+        public int LowerBound { get { return lowerBound; } }
 
-        public int UpperBound { get { return FindPeak(0.5, 1.0); } }
+        public int UpperBound { get { return upperBound; } }
 
         public int[] Histogram { get; private set; }
+        #endregion
 
-
+        #region Private stuff
+        // local fields are necessary
+        // using computed properties will make the class extremly slow
         private int[] intensities;
         private int intensityRange;
+        private int maxIntensity;
+        private int minIntensity;
+        private int lowerBound;
+        private int upperBound;
 
         private void CreateHistogram()
         {
             Histogram = new int[intensityRange + 1];
             foreach (var intensity in intensities)
             {
-                Histogram[intensity - MinIntensity]++;
+                Histogram[intensity - minIntensity]++;
             }
         }
 
@@ -58,8 +72,8 @@ namespace NmmStageMicro
                     peakPosition = i;
                 }
             }
-            return peakPosition + MinIntensity;
+            return peakPosition + minIntensity;
         }
-
+        #endregion
     }
 }
