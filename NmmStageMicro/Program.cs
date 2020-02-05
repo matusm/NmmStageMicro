@@ -106,7 +106,6 @@ namespace NmmStageMicro
                 int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
                 // morphological filter
                 MorphoFilter filter = new MorphoFilter(skeleton);
-
                 // find line marks
                 LineDetector marks = new LineDetector(skeleton, xData);
                 ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
@@ -115,7 +114,6 @@ namespace NmmStageMicro
             }
 
             StringBuilder sb = new StringBuilder();
-
             // fill file contents - header section
             sb.AppendLine($"Output of {ConsoleUI.Title}");
             sb.AppendLine($"InputFile           = {theData.MetaData.BaseFileName}");
@@ -123,7 +121,7 @@ namespace NmmStageMicro
             sb.AppendLine($"SampleSpecies       = {theData.MetaData.SampleSpecies}");
             sb.AppendLine($"SampleSpecification = {theData.MetaData.SampleSpecification}");
             sb.AppendLine($"ThermalExpansion    = {options.Alpha.ToString("E2")}");
-            sb.AppendLine($"ScaleType           = " + sScaleType);
+            //sb.AppendLine($"ScaleType           = " + sScaleType);
             sb.AppendLine($"DataLines           = {theData.MetaData.NumberOfDataPoints}");
             sb.AppendLine($"Profiles            = {theData.MetaData.NumberOfProfiles}");
             sb.AppendLine($"InputChannels       = {theData.MetaData.NumberOfColumnsInFile}");
@@ -131,18 +129,19 @@ namespace NmmStageMicro
             sb.AppendLine($"Z-AxisChannel       = {options.ZAxisDesignation}");
             sb.AppendLine($"PointSpacing        = {(theData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} um");
             sb.AppendLine($"ProfileSpacing      = {(theData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} um");
-            sb.AppendLine($"Trace               = " + sTrace);
-            sb.AppendLine($"Probe               = " + nmm.ProbeDesignation);
-            sb.AppendLine($"ScanSpeed           = " + nmm.ScanSpeed + " um/s");
-            sb.AppendLine($"Threshold           = " + fThreshold);
-            sb.AppendLine($"FilterParameter     = " + nMorph);
-            sb.AppendLine($"AirTemperature      = " + nmm.AirTemperature.ToString("F3") + " oC");
-            sb.AppendLine($"AirPressure         = " + nmm.AirPressure.ToString("F0") + " Pa");
-            sb.AppendLine($"AirHumidity         = " + nmm.RelHumidity.ToString("F1") + " %");
-            sb.AppendLine($"NominalDivision     = " + fDiv + " um");
-            sb.AppendLine($"ExpectedLineMarks   = " + nTargetLines);
-            sb.AppendLine($"EvaluatedProfiles   = " + nValidProf);
-            sb.AppendLine($"ReferencedToLine    = " + iRef);
+            sb.AppendLine($"Trace               = {topographyProcessType}");
+            sb.AppendLine($"Probe               = {theData.MetaData.ProbeDesignation}");
+            sb.AppendLine($"ScanSpeed           = {theData.MetaData.ScanSpeed} um/s");
+            sb.AppendLine($"Threshold           = {options.Threshold}");
+            sb.AppendLine($"FilterParameter     = {options.Morpho}");
+            sb.AppendLine($"SampleTemperature   = {theData.MetaData.SampleTemperature.ToString("F3")} oC");
+            sb.AppendLine($"AirTemperature      = {theData.MetaData.AirTemperature.ToString("F3")} oC");
+            sb.AppendLine($"AirPressure         = {theData.MetaData.BarometricPressure.ToString("F0")} Pa");
+            sb.AppendLine($"AirHumidity         = {theData.MetaData.RelativeHumidity.ToString("F1")} %");
+            //sb.AppendLine($"NominalDivision     = " + fDiv + " um");
+            //sb.AppendLine($"ExpectedLineMarks   = " + nTargetLines);
+            //sb.AppendLine($"EvaluatedProfiles   = " + nValidProf);
+            //sb.AppendLine($"ReferencedToLine    = " + iRef);
             sb.AppendLine("====================");
             sb.AppendLine("1 : Line number");
             sb.AppendLine("2 : Nominal value / um");
@@ -151,28 +150,6 @@ namespace NmmStageMicro
             sb.AppendLine("5 : Line width / um");
             sb.AppendLine("6 : Range of line widths / um");
             sb.AppendLine("@@@@");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
             foreach (var line in result.LineMarks)
             {
