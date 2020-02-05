@@ -37,6 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classifier.cs" />
+    <Compile Include="LineMark.cs" />
+    <Compile Include="SimpleLineMark.cs" />
+    <Compile Include="LineScale.cs" />
     <Compile Include="MarkFinder.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

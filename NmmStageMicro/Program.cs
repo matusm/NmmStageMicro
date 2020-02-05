@@ -87,6 +87,11 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine($"({relativeSpan:F1} % of full range)");
             ConsoleUI.WriteLine();
 
+
+            // prepare object for the dimensional result
+            LineScale result = new LineScale(options.ExpectedTargets);
+            result.SetNominalValues(options.NominalDivision);
+
             // the loop over all profiles
             for (int profileIndex = 1; profileIndex <= theData.MetaData.NumberOfProfiles; profileIndex++)
             {
@@ -94,7 +99,7 @@ namespace NmmStageMicro
                 zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex, topographyProcessType);
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
-                    xData[i] *= 1.0e6;
+                    xData[i] = xData[i] * 1.0e6;
                 // generate black/white profile
                 Classifier classifier = new Classifier(DoubleToInt(zData));
                 int[] skeleton = classifier.GetSkeleton(options.Threshold, eval.LowerBound, eval.UpperBound);
@@ -103,8 +108,16 @@ namespace NmmStageMicro
                 
                 // find line marks
                 MarkFinder marks = new MarkFinder(skeleton, xData);
-                ConsoleUI.WriteLine($"profile: {profileIndex} with {marks.LineCenterPositions.Count} line marks");
+                ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount!=options.ExpectedTargets ? "*": " ")}");
+                ConsoleUI.WriteLine($"{xData[xData.Length-1]}");
+                result.UpdateSample(marks.LineMarks, 0);
             }
+
+            foreach (var line in result.LineMarks)
+            {
+                ConsoleUI.WriteLine(line);
+            }
+
         }
 
         private static int[] DoubleToInt(double[] rawIntensities)

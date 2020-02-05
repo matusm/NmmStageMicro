@@ -16,12 +16,11 @@ namespace NmmStageMicro
             LineFinder();
         }
 
-        public ScaleMarkType MarkType { get; private set; } = ScaleMarkType.Unknown;
+        public int LineCount => LineMarks.Count;
         public List<double> LeftEdgePositions { get; private set; } = new List<double>();
         public List<double> RightEdgePositions { get; private set; } = new List<double>();
-        public List<double> LineCenterPositions { get; private set; } = new List<double>();
-        public List<double> LineWidths { get; private set; } = new List<double>();
-
+        public List<SimpleLineMark> LineMarks { get; private set; } = new List<SimpleLineMark>();
+        
         private void EdgeDetector()
         {
             for (int i = 1; i < skeleton.Length; i++)
@@ -38,16 +37,7 @@ namespace NmmStageMicro
             if (LeftEdgePositions.Count != RightEdgePositions.Count) return;
             if (LeftEdgePositions.Count == 0) return;
             for (int i = 0; i < LeftEdgePositions.Count; i++)
-            {
-                double position = (LeftEdgePositions[i] + RightEdgePositions[i]) / 2.0;
-                double width = Math.Abs(LeftEdgePositions[i] - RightEdgePositions[i]);
-                LineCenterPositions.Add(position);
-                LineWidths.Add(width);
-                if (LeftEdgePositions[i] < RightEdgePositions[i])
-                    MarkType = ScaleMarkType.Reflective;
-                else
-                    MarkType = ScaleMarkType.Transparent;
-            }
+                LineMarks.Add(new SimpleLineMark(LeftEdgePositions[i], RightEdgePositions[i]));
         }
 
         private int[] skeleton;
@@ -55,12 +45,6 @@ namespace NmmStageMicro
 
     }
 
-    enum ScaleMarkType
-    {
-        Unknown,
-        NoMark,
-        Transparent,
-        Reflective
-    }
+
 
 }
