@@ -1,4 +1,14 @@
-﻿using System.Linq;
+﻿//*******************************************************************************************
+//
+// Class to analyze a intensity data to find the two plateaus in binary masks 
+//
+// The maxima in the upper and lower half of the intensity histogram
+// are taken as the UpperBound and LowerBound, respectively
+// The whole analysis is performed by the constructor
+//
+//*******************************************************************************************
+
+using System.Linq;
 
 namespace NmmStageMicro
 {
@@ -33,12 +43,12 @@ namespace NmmStageMicro
         #region Private stuff
         // local fields are necessary
         // using computed properties will make the class extremly slow
-        private int[] intensities;
-        private int intensityRange;
-        private int maxIntensity;
-        private int minIntensity;
-        private int lowerBound;
-        private int upperBound;
+        private readonly int[] intensities;
+        private readonly int intensityRange;
+        private readonly int maxIntensity;
+        private readonly int minIntensity;
+        private readonly int lowerBound;
+        private readonly int upperBound;
 
         private void CreateHistogram()
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using Bev.IO.NmmReader;
 using Bev.IO.NmmReader.scan_mode;
 
@@ -102,16 +103,76 @@ namespace NmmStageMicro
                     xData[i] = xData[i] * 1.0e6;
                 // generate black/white profile
                 Classifier classifier = new Classifier(DoubleToInt(zData));
-                int[] skeleton = classifier.GetSkeleton(options.Threshold, eval.LowerBound, eval.UpperBound);
+                int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
                 // morphological filter
                 MorphoFilter filter = new MorphoFilter(skeleton);
-                
+
                 // find line marks
-                MarkFinder marks = new MarkFinder(skeleton, xData);
-                ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount!=options.ExpectedTargets ? "*": " ")}");
-                ConsoleUI.WriteLine($"{xData[xData.Length-1]}");
+                LineDetector marks = new LineDetector(skeleton, xData);
+                ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
+                ConsoleUI.WriteLine($"{xData[xData.Length - 1]}");
                 result.UpdateSample(marks.LineMarks, 0);
             }
+
+            StringBuilder sb = new StringBuilder();
+
+            // fill file contents - header section
+            sb.AppendLine($"Output of {ConsoleUI.Title}");
+            sb.AppendLine($"InputFile           = {theData.MetaData.BaseFileName}");
+            sb.AppendLine($"SampleIdentifier    = {theData.MetaData.SampleIdentifier}");
+            sb.AppendLine($"SampleSpecies       = {theData.MetaData.SampleSpecies}");
+            sb.AppendLine($"SampleSpecification = {theData.MetaData.SampleSpecification}");
+            sb.AppendLine($"ThermalExpansion    = {options.Alpha.ToString("E2")}");
+            sb.AppendLine($"ScaleType           = " + sScaleType);
+            sb.AppendLine($"DataLines           = {theData.MetaData.NumberOfDataPoints}");
+            sb.AppendLine($"Profiles            = {theData.MetaData.NumberOfProfiles}");
+            sb.AppendLine($"InputChannels       = {theData.MetaData.NumberOfColumnsInFile}");
+            sb.AppendLine($"X-AxisChannel       = {options.XAxisDesignation}");
+            sb.AppendLine($"Z-AxisChannel       = {options.ZAxisDesignation}");
+            sb.AppendLine($"PointSpacing        = {(theData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} um");
+            sb.AppendLine($"ProfileSpacing      = {(theData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} um");
+            sb.AppendLine($"Trace               = " + sTrace);
+            sb.AppendLine($"Probe               = " + nmm.ProbeDesignation);
+            sb.AppendLine($"ScanSpeed           = " + nmm.ScanSpeed + " um/s");
+            sb.AppendLine($"Threshold           = " + fThreshold);
+            sb.AppendLine($"FilterParameter     = " + nMorph);
+            sb.AppendLine($"AirTemperature      = " + nmm.AirTemperature.ToString("F3") + " oC");
+            sb.AppendLine($"AirPressure         = " + nmm.AirPressure.ToString("F0") + " Pa");
+            sb.AppendLine($"AirHumidity         = " + nmm.RelHumidity.ToString("F1") + " %");
+            sb.AppendLine($"NominalDivision     = " + fDiv + " um");
+            sb.AppendLine($"ExpectedLineMarks   = " + nTargetLines);
+            sb.AppendLine($"EvaluatedProfiles   = " + nValidProf);
+            sb.AppendLine($"ReferencedToLine    = " + iRef);
+            sb.AppendLine("====================");
+            sb.AppendLine("1 : Line number");
+            sb.AppendLine("2 : Nominal value / um");
+            sb.AppendLine("3 : Position deviation / um");
+            sb.AppendLine("4 : Range of line position values / um");
+            sb.AppendLine("5 : Line width / um");
+            sb.AppendLine("6 : Range of line widths / um");
+            sb.AppendLine("@@@@");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             foreach (var line in result.LineMarks)
             {

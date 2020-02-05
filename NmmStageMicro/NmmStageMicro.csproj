@@ -40,7 +40,7 @@
     <Compile Include="LineMark.cs" />
     <Compile Include="SimpleLineMark.cs" />
     <Compile Include="LineScale.cs" />
-    <Compile Include="MarkFinder.cs" />
+    <Compile Include="LineDetector.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConsoleUI.cs" />

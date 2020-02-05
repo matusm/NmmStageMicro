@@ -1,11 +1,10 @@
-﻿using System;
-namespace NmmStageMicro
+﻿namespace NmmStageMicro
 {
     public class MorphoFilter
     {
-        public MorphoFilter(int[] skeleton)
+        public MorphoFilter(int[] segmented)
         {
-            this.skeleton = skeleton;
+            this.segmented = segmented;
         }
 
         public int[] FilterWithParameter(int filterParameter)
@@ -13,7 +12,7 @@ namespace NmmStageMicro
             Erode(filterParameter);
             Dilate(filterParameter);
 
-            return skeleton;
+            return segmented;
         }
 
         private void Erode(int filterParameter) // abtragen
@@ -26,6 +25,6 @@ namespace NmmStageMicro
 
         }
 
-        private int[] skeleton;
+        private int[] segmented;
     }
 }
