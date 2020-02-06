@@ -16,7 +16,7 @@ namespace NmmStageMicro
         public string ZAxisDesignation { get; set; }
 
         [Option("precision", DefaultValue = 2, HelpText = "Decimal digits for results")]
-        public int iPrecision { get; set; }
+        public int Precision { get; set; }
 
         [Option('d', "div", DefaultValue = 0, HelpText = "Nominal scale division in um")]
         public double NominalDivision { get; set; }

@@ -70,15 +70,25 @@ namespace NmmStageMicro
         }
 
         // set nominal line values for equidistant lines
-        public void SetNominalValues(double division)
+        public void SetNominalValues(double division, int referenceIndex)
         {
             for (int i = 0; i < numberOfLineMarks; i++)
             {
-                LineMarks[i].NominalPosition = (double)i*division;
+                LineMarks[i].NominalPosition = (double)(i-referenceIndex)*division;
             }
         }
         #endregion
 
+        private void BuildLocalLineMarks()
+        {
+            localLineMarks = new LineMark[LineMarks.Length];
+            for (int i = 0; i < localLineMarks.Length; i++)
+            {
+                localLineMarks[i] = new LineMark(LineMarks[i]);
+            }
+        }
+
+        private LineMark[] localLineMarks;
         private readonly int numberOfLineMarks;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Bev.IO.NmmReader;
@@ -76,7 +77,7 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine($"nominal scale division: {options.NominalDivision} um");
             ConsoleUI.WriteLine();
 
-            // evaluate the intensities for ALL profiles
+            // evaluate the intensities for ALL profiles == the whole scan field
             ConsoleUI.StartOperation("Classifying intensity data");
             double[] luminanceField = theData.ExtractProfile(options.ZAxisDesignation, 0, topographyProcessType);
             IntensityEvaluator eval = new IntensityEvaluator(DoubleToInt(luminanceField));
@@ -88,10 +89,9 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine($"({relativeSpan:F1} % of full range)");
             ConsoleUI.WriteLine();
 
-
-            // prepare object for the dimensional result
+            // prepare object for the overall dimensional result
             LineScale result = new LineScale(options.ExpectedTargets);
-            result.SetNominalValues(options.NominalDivision);
+            result.SetNominalValues(options.NominalDivision, options.RefLine);
 
             // the loop over all profiles
             for (int profileIndex = 1; profileIndex <= theData.MetaData.NumberOfProfiles; profileIndex++)
@@ -109,17 +109,17 @@ namespace NmmStageMicro
                 // find line marks
                 LineDetector marks = new LineDetector(skeleton, xData);
                 ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
-                result.UpdateSample(marks.LineMarks, 0);
+                result.UpdateSample(marks.LineMarks, options.RefLine);
             }
-
+            // prepare output
+            string outFormater = $"F{options.Precision}";
             StringBuilder sb = new StringBuilder();
-            // fill file contents - header section
-            sb.AppendLine($"Output of {ConsoleUI.Title}");
+            sb.AppendLine($"{ConsoleUI.WelcomeMessage}");
             sb.AppendLine($"InputFile           = {theData.MetaData.BaseFileName}");
             sb.AppendLine($"SampleIdentifier    = {theData.MetaData.SampleIdentifier}");
             sb.AppendLine($"SampleSpecies       = {theData.MetaData.SampleSpecies}");
             sb.AppendLine($"SampleSpecification = {theData.MetaData.SampleSpecification}");
-            sb.AppendLine($"ThermalExpansion    = {options.Alpha.ToString("E2")}");
+            sb.AppendLine($"ThermalExpansion    = {options.Alpha.ToString("E2")} 1/K");
             sb.AppendLine($"ScaleType           = {result.ScaleType}");
             sb.AppendLine($"DataLines           = {theData.MetaData.NumberOfDataPoints}");
             sb.AppendLine($"Profiles            = {theData.MetaData.NumberOfProfiles}");
@@ -141,7 +141,7 @@ namespace NmmStageMicro
             sb.AppendLine($"ExpectedLineMarks   = {options.ExpectedTargets}");
             sb.AppendLine($"EvaluatedProfiles   = {result.SampleSize}");
             sb.AppendLine($"ReferencedToLine    = {options.RefLine}");
-            sb.AppendLine("====================");
+            sb.AppendLine("=====================");
             sb.AppendLine("1 : Line number");
             sb.AppendLine("2 : Nominal value / um");
             sb.AppendLine("3 : Position deviation / um");
@@ -150,12 +150,34 @@ namespace NmmStageMicro
             sb.AppendLine("6 : Range of line widths / um");
             sb.AppendLine("@@@@");
 
-            Console.WriteLine(sb.ToString());
-
             foreach (var line in result.LineMarks)
             {
                 ConsoleUI.WriteLine(line);
+                sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
+                    $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
+                    $"{line.Deviation.ToString(outFormater).PadLeft(10)}" +
+                    $"{line.LineCenterRange.ToString(outFormater).PadLeft(10)}" +
+                    $"{line.AverageLineWidth.ToString(outFormater).PadLeft(10)}" +
+                    $"{line.LineWidthRange.ToString(outFormater).PadLeft(10)}");
             }
+
+            //Console.WriteLine(sb.ToString());
+
+            #region File output
+            string outFileName;
+            if (fileNames.Length >= 2)
+                outFileName = fileNames[1];
+            else
+            {
+                outFileName = nmmFileNameObject.GetFreeFileNameWithIndex(".prn"); // extension will be added by WriteToFile()
+            }
+            ConsoleUI.WriteLine();
+            ConsoleUI.WritingFile(outFileName);
+            StreamWriter hOutFile = File.CreateText(outFileName);
+            hOutFile.Write(sb.ToString());
+            hOutFile.Close();
+            ConsoleUI.Done();
+            #endregion
 
         }
 

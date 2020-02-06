@@ -17,8 +17,13 @@
 // - Deviation
 // - SampleSize
 // 
-// Given a nominal position one may also get a deviationThe relevant parameters (center position, line width, line type) of the
-// given line mark are accesible via properties.
+// Given a nominal position one may also get a deviation. The relevant parameters 
+// (center position, line width, line type) of the given line mark are 
+// accesible via properties.
+//
+// Attention! when referencing to a line other than #0, center line positions are
+// offset by the difference of the nominal values!
+// this mus be corrected for in LineScale object!
 //
 //*******************************************************************************************
 
@@ -33,9 +38,24 @@ namespace NmmStageMicro
             Tag = tag;
             SampleSize = 0;
         }
+
+        public LineMark(LineMark clone)
+        {
+            NominalPosition = clone.NominalPosition;
+            scaleType = clone.ScaleType;
+            SampleSize = clone.SampleSize;
+            Tag = clone.Tag;
+            AverageLineCenter = clone.AverageLineCenter;
+            AverageLineWidth = clone.AverageLineWidth;
+            centerMax = clone.centerMax;
+            centerMin = clone.centerMin;
+            widthMax = clone.widthMax;
+            widthMin = clone.widthMin;
+        }
         #endregion
 
         #region Properties
+        public double NominalPosition { get; set; }
         public ScaleMarkType ScaleType => scaleType;
         public int SampleSize { get; private set; }
         public int Tag { get; private set; }
@@ -43,7 +63,6 @@ namespace NmmStageMicro
         public double AverageLineWidth { get; private set; }
         public double LineCenterRange => centerMax - centerMin;
         public double LineWidthRange => widthMax - widthMin;
-        public double NominalPosition { get; set; }
         public double Deviation => AverageLineCenter - NominalPosition;
         #endregion
 
@@ -69,10 +88,10 @@ namespace NmmStageMicro
             }
             AverageLineCenter += (reducedCenter - AverageLineCenter) / SampleSize;
             AverageLineWidth += (simpleLineMark.LineWidth - AverageLineWidth) / SampleSize;
-            if (reducedCenter > centerMax) centerMax = simpleLineMark.LineCenter;
-            if (reducedCenter < centerMin) centerMin = simpleLineMark.LineCenter;
-            if (simpleLineMark.LineWidth > centerMax) widthMax = simpleLineMark.LineWidth;
-            if (simpleLineMark.LineWidth < centerMin) widthMin = simpleLineMark.LineWidth;
+            if (reducedCenter > centerMax) centerMax = reducedCenter;
+            if (reducedCenter < centerMin) centerMin = reducedCenter;
+            if (simpleLineMark.LineWidth > widthMax) widthMax = simpleLineMark.LineWidth;
+            if (simpleLineMark.LineWidth < widthMin) widthMin = simpleLineMark.LineWidth;
         }
         #endregion
 
