@@ -31,6 +31,8 @@ namespace NmmStageMicro
 
         #region Properties
         public LineMark[] LineMarks { get; }
+        public int SampleSize => LineMarks[0].SampleSize;
+        public ScaleMarkType ScaleType => LineMarks[0].ScaleType;
         #endregion
 
         #region Methods

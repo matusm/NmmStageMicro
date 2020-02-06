@@ -109,7 +109,6 @@ namespace NmmStageMicro
                 // find line marks
                 LineDetector marks = new LineDetector(skeleton, xData);
                 ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
-                ConsoleUI.WriteLine($"{xData[xData.Length - 1]}");
                 result.UpdateSample(marks.LineMarks, 0);
             }
 
@@ -121,7 +120,7 @@ namespace NmmStageMicro
             sb.AppendLine($"SampleSpecies       = {theData.MetaData.SampleSpecies}");
             sb.AppendLine($"SampleSpecification = {theData.MetaData.SampleSpecification}");
             sb.AppendLine($"ThermalExpansion    = {options.Alpha.ToString("E2")}");
-            //sb.AppendLine($"ScaleType           = " + sScaleType);
+            sb.AppendLine($"ScaleType           = {result.ScaleType}");
             sb.AppendLine($"DataLines           = {theData.MetaData.NumberOfDataPoints}");
             sb.AppendLine($"Profiles            = {theData.MetaData.NumberOfProfiles}");
             sb.AppendLine($"InputChannels       = {theData.MetaData.NumberOfColumnsInFile}");
@@ -138,10 +137,10 @@ namespace NmmStageMicro
             sb.AppendLine($"AirTemperature      = {theData.MetaData.AirTemperature.ToString("F3")} oC");
             sb.AppendLine($"AirPressure         = {theData.MetaData.BarometricPressure.ToString("F0")} Pa");
             sb.AppendLine($"AirHumidity         = {theData.MetaData.RelativeHumidity.ToString("F1")} %");
-            //sb.AppendLine($"NominalDivision     = " + fDiv + " um");
-            //sb.AppendLine($"ExpectedLineMarks   = " + nTargetLines);
-            //sb.AppendLine($"EvaluatedProfiles   = " + nValidProf);
-            //sb.AppendLine($"ReferencedToLine    = " + iRef);
+            sb.AppendLine($"NominalDivision     = {options.NominalDivision} um");
+            sb.AppendLine($"ExpectedLineMarks   = {options.ExpectedTargets}");
+            sb.AppendLine($"EvaluatedProfiles   = {result.SampleSize}");
+            sb.AppendLine($"ReferencedToLine    = {options.RefLine}");
             sb.AppendLine("====================");
             sb.AppendLine("1 : Line number");
             sb.AppendLine("2 : Nominal value / um");
@@ -150,6 +149,8 @@ namespace NmmStageMicro
             sb.AppendLine("5 : Line width / um");
             sb.AppendLine("6 : Range of line widths / um");
             sb.AppendLine("@@@@");
+
+            Console.WriteLine(sb.ToString());
 
             foreach (var line in result.LineMarks)
             {

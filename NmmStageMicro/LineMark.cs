@@ -36,6 +36,7 @@ namespace NmmStageMicro
         #endregion
 
         #region Properties
+        public ScaleMarkType ScaleType => scaleType;
         public int SampleSize { get; private set; }
         public int Tag { get; private set; }
         public double AverageLineCenter { get; private set; }
@@ -58,6 +59,7 @@ namespace NmmStageMicro
             SampleSize++;
             if(SampleSize==1)
             {
+                scaleType = simpleLineMark.LineType;
                 AverageLineCenter = reducedCenter;
                 AverageLineWidth = simpleLineMark.LineWidth;
                 centerMax = AverageLineCenter;
@@ -80,6 +82,7 @@ namespace NmmStageMicro
             return $"LineMark {Tag}, deviation {Deviation:F3}, width {AverageLineWidth:F3}";
         }
 
+        private ScaleMarkType scaleType;
         private double centerMax;
         private double centerMin;
         private double widthMin;
