@@ -33,7 +33,7 @@ namespace NmmStageMicro
             // get the filename(s)
             fileNames = options.ListOfFileNames.ToArray();
             if (fileNames.Length == 0)
-                ConsoleUI.ErrorExit("!Missing input file", 1);
+                ConsoleUI.ErrorExit("!Missing input file name", 1);
 
             // read all relevant scan data
             ConsoleUI.StartOperation("Reading and evaluating files");
@@ -42,12 +42,11 @@ namespace NmmStageMicro
             theData = new NmmScanData(nmmFileNameObject);
             ConsoleUI.Done();
 
-
-            // Check if requested channels present in raw data
+            // Check if requested channels are present in raw data
             if (!theData.ColumnPresent(options.XAxisDesignation))
-                ConsoleUI.ErrorExit($"!Channel {options.XAxisDesignation} not in data files", 2);
+                ConsoleUI.ErrorExit($"!Requested channel {options.XAxisDesignation} not in data files", 2);
             if (!theData.ColumnPresent(options.ZAxisDesignation))
-                ConsoleUI.ErrorExit($"!Channel {options.ZAxisDesignation} not in data files", 3);
+                ConsoleUI.ErrorExit($"!Requested channel {options.ZAxisDesignation} not in data files", 3);
 
             topographyProcessType = TopographyProcessType.ForwardOnly;
             if (options.UseBack)
@@ -128,6 +127,11 @@ namespace NmmStageMicro
             sb.AppendLine($"Z-AxisChannel       = {options.ZAxisDesignation}");
             sb.AppendLine($"PointSpacing        = {(theData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} um");
             sb.AppendLine($"ProfileSpacing      = {(theData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} um");
+            sb.AppendLine($"MinimumIntensity    = {eval.MinIntensity}");
+            sb.AppendLine($"MaximumIntensity    = {eval.MaxIntensity}");
+            sb.AppendLine($"LowerPlateau        = {eval.LowerBound}");
+            sb.AppendLine($"UpperPlateau        = {eval.UpperBound}");
+            sb.AppendLine($"RelativeSpan        = {relativeSpan:F1} %");
             sb.AppendLine($"Trace               = {topographyProcessType}");
             sb.AppendLine($"Probe               = {theData.MetaData.ProbeDesignation}");
             sb.AppendLine($"ScanSpeed           = {theData.MetaData.ScanSpeed} um/s");
@@ -142,7 +146,7 @@ namespace NmmStageMicro
             sb.AppendLine($"EvaluatedProfiles   = {result.SampleSize}");
             sb.AppendLine($"ReferencedToLine    = {options.RefLine}");
             sb.AppendLine("=====================");
-            sb.AppendLine("1 : Line number");
+            sb.AppendLine("1 : Line number (tag)");
             sb.AppendLine("2 : Nominal value / um");
             sb.AppendLine("3 : Position deviation / um");
             sb.AppendLine("4 : Range of line position values / um");

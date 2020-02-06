@@ -64,7 +64,7 @@ namespace NmmStageMicro
             int lower = (int)((double)intensityRange * relLower);
             int upper = (int)((double)intensityRange * relUpper);
             // rudimentary error check
-            if (lower < 0) lower = 0; ;
+            if (lower < 0) lower = 0;
             if (upper > intensityRange) upper = intensityRange;
             if (upper < lower)
             {
