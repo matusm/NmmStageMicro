@@ -36,7 +36,7 @@ namespace NmmStageMicro
                 ConsoleUI.ErrorExit("!Missing input file name", 1);
 
             // read all relevant scan data
-            ConsoleUI.StartOperation("Reading and evaluating files");
+            ConsoleUI.StartOperation("Reading NMM scan files");
             nmmFileNameObject = new NmmFileName(fileNames[0]);
             nmmFileNameObject.SetScanIndex(options.ScanIndex);
             theData = new NmmScanData(nmmFileNameObject);
@@ -63,6 +63,10 @@ namespace NmmStageMicro
                 ConsoleUI.ErrorExit("!Unknown scan type", 4);
             if (theData.MetaData.ScanStatus == ScanDirectionStatus.NoData)
                 ConsoleUI.ErrorExit("!No scan data present", 5);
+
+            // one must avoid referencing to an line outside of expected number of line marks
+            if (options.RefLine < 0) options.RefLine = 0;
+            if (options.RefLine >= options.ExpectedTargets) options.RefLine = options.ExpectedTargets - 1;
 
             // some screen output
             ConsoleUI.WriteLine();
@@ -114,38 +118,46 @@ namespace NmmStageMicro
             string outFormater = $"F{options.Precision}";
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"{ConsoleUI.WelcomeMessage}");
-            sb.AppendLine($"InputFile           = {theData.MetaData.BaseFileName}");
-            sb.AppendLine($"SampleIdentifier    = {theData.MetaData.SampleIdentifier}");
-            sb.AppendLine($"SampleSpecies       = {theData.MetaData.SampleSpecies}");
-            sb.AppendLine($"SampleSpecification = {theData.MetaData.SampleSpecification}");
-            sb.AppendLine($"ThermalExpansion    = {options.Alpha.ToString("E2")} 1/K");
-            sb.AppendLine($"ScaleType           = {result.ScaleType}");
-            sb.AppendLine($"DataLines           = {theData.MetaData.NumberOfDataPoints}");
-            sb.AppendLine($"Profiles            = {theData.MetaData.NumberOfProfiles}");
-            sb.AppendLine($"InputChannels       = {theData.MetaData.NumberOfColumnsInFile}");
-            sb.AppendLine($"X-AxisChannel       = {options.XAxisDesignation}");
-            sb.AppendLine($"Z-AxisChannel       = {options.ZAxisDesignation}");
-            sb.AppendLine($"PointSpacing        = {(theData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} um");
-            sb.AppendLine($"ProfileSpacing      = {(theData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} um");
-            sb.AppendLine($"MinimumIntensity    = {eval.MinIntensity}");
-            sb.AppendLine($"MaximumIntensity    = {eval.MaxIntensity}");
-            sb.AppendLine($"LowerPlateau        = {eval.LowerBound}");
-            sb.AppendLine($"UpperPlateau        = {eval.UpperBound}");
-            sb.AppendLine($"RelativeSpan        = {relativeSpan:F1} %");
-            sb.AppendLine($"Trace               = {topographyProcessType}");
-            sb.AppendLine($"Probe               = {theData.MetaData.ProbeDesignation}");
-            sb.AppendLine($"ScanSpeed           = {theData.MetaData.ScanSpeed} um/s");
-            sb.AppendLine($"Threshold           = {options.Threshold}");
-            sb.AppendLine($"FilterParameter     = {options.Morpho}");
-            sb.AppendLine($"SampleTemperature   = {theData.MetaData.SampleTemperature.ToString("F3")} oC");
-            sb.AppendLine($"AirTemperature      = {theData.MetaData.AirTemperature.ToString("F3")} oC");
-            sb.AppendLine($"AirPressure         = {theData.MetaData.BarometricPressure.ToString("F0")} Pa");
-            sb.AppendLine($"AirHumidity         = {theData.MetaData.RelativeHumidity.ToString("F1")} %");
-            sb.AppendLine($"NominalDivision     = {options.NominalDivision} um");
-            sb.AppendLine($"ExpectedLineMarks   = {options.ExpectedTargets}");
-            sb.AppendLine($"EvaluatedProfiles   = {result.SampleSize}");
-            sb.AppendLine($"ReferencedToLine    = {options.RefLine}");
-            sb.AppendLine("=====================");
+            sb.AppendLine($"InputFile            = {theData.MetaData.BaseFileName}");
+            // section for sample specific metadata
+            sb.AppendLine($"SampleIdentifier     = {theData.MetaData.SampleIdentifier}");
+            sb.AppendLine($"SampleSpecies        = {theData.MetaData.SampleSpecies}");
+            sb.AppendLine($"SampleSpecification  = {theData.MetaData.SampleSpecification}");
+            sb.AppendLine($"ExpectedLineMarks    = {options.ExpectedTargets}");
+            sb.AppendLine($"NominalDivision      = {options.NominalDivision} um");
+            sb.AppendLine($"ScaleType            = {result.ScaleType}");
+            sb.AppendLine($"ThermalExpansion     = {options.Alpha.ToString("E2")} 1/K");
+            // scan file specific data
+            sb.AppendLine($"PointsPerProfile     = {theData.MetaData.NumberOfDataPoints}");
+            sb.AppendLine($"Profiles             = {theData.MetaData.NumberOfProfiles}");
+            sb.AppendLine($"InputChannels        = {theData.MetaData.NumberOfColumnsInFile}");
+            sb.AppendLine($"PointSpacing         = {(theData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} um");
+            sb.AppendLine($"ProfileSpacing       = {(theData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} um");
+            sb.AppendLine($"AngularOrientation   = {theData.MetaData.ScanFieldRotation:F2} grad");
+            sb.AppendLine($"ScanSpeed            = {theData.MetaData.ScanSpeed} um/s");
+            sb.AppendLine($"Probe                = {theData.MetaData.ProbeDesignation}");
+            // evaluation parameters, user supplied
+            sb.AppendLine($"X-AxisChannel        = {options.XAxisDesignation}");
+            sb.AppendLine($"Z-AxisChannel        = {options.ZAxisDesignation}");
+            sb.AppendLine($"Trace                = {topographyProcessType}");
+            sb.AppendLine($"Threshold            = {options.Threshold}");
+            sb.AppendLine($"FilterParameter      = {options.Morpho}");
+            sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
+            double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
+            sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} um");
+            // auxiliary values 
+            sb.AppendLine($"MinimumIntensity     = {eval.MinIntensity}");
+            sb.AppendLine($"MaximumIntensity     = {eval.MaxIntensity}");
+            sb.AppendLine($"LowerPlateau         = {eval.LowerBound}");
+            sb.AppendLine($"UpperPlateau         = {eval.UpperBound}");
+            sb.AppendLine($"RelativeSpan         = {relativeSpan:F1} %");
+            sb.AppendLine($"EvaluatedProfiles    = {result.SampleSize}");
+            // environmental data
+            sb.AppendLine($"SampleTemperature    = {theData.MetaData.SampleTemperature.ToString("F3")} oC");
+            sb.AppendLine($"AirTemperature       = {theData.MetaData.AirTemperature.ToString("F3")} oC");
+            sb.AppendLine($"AirPressure          = {theData.MetaData.BarometricPressure.ToString("F0")} Pa");
+            sb.AppendLine($"AirHumidity          = {theData.MetaData.RelativeHumidity.ToString("F1")} %");
+            sb.AppendLine("======================");
             sb.AppendLine("1 : Line number (tag)");
             sb.AppendLine("2 : Nominal value / um");
             sb.AppendLine("3 : Position deviation / um");
@@ -156,21 +168,20 @@ namespace NmmStageMicro
 
             foreach (var line in result.LineMarks)
             {
-                ConsoleUI.WriteLine(line);
+                double deltaL = ThermalCorrection(line.NominalPosition);
+
                 sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
                     $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
-                    $"{line.Deviation.ToString(outFormater).PadLeft(10)}" +
+                    $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
                     $"{line.LineCenterRange.ToString(outFormater).PadLeft(10)}" +
                     $"{line.AverageLineWidth.ToString(outFormater).PadLeft(10)}" +
-                    $"{line.LineWidthRange.ToString(outFormater).PadLeft(10)}");
+                    $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
             }
-
-            //Console.WriteLine(sb.ToString());
 
             #region File output
             string outFileName;
             if (fileNames.Length >= 2)
-                outFileName = fileNames[1];
+                outFileName = fileNames[1]; // path and extension must be explicitely given
             else
             {
                 outFileName = nmmFileNameObject.GetFreeFileNameWithIndex(".prn"); // extension will be added by WriteToFile()
@@ -184,6 +195,17 @@ namespace NmmStageMicro
             #endregion
 
         }
+
+        // gives the thermal correction value in µm for a given length in µm
+        // return value must be added to the given length to obtain the true length
+        private static double ThermalCorrection(double length)
+        {
+            double alpha = options.Alpha;
+            double deltaT = theData.MetaData.SampleTemperature - 20.0;
+            double deltaL = alpha * length * deltaT;
+            return -deltaL;
+        }
+
 
         private static int[] DoubleToInt(double[] rawIntensities)
         {
