@@ -41,6 +41,8 @@ namespace NmmStageMicro
             nmmFileNameObject.SetScanIndex(options.ScanIndex);
             theData = new NmmScanData(nmmFileNameObject);
             ConsoleUI.Done();
+            // TODO check if data present
+          
 
             // Check if requested channels are present in raw data
             if (!theData.ColumnPresent(options.XAxisDesignation))
@@ -166,18 +168,24 @@ namespace NmmStageMicro
             sb.AppendLine("6 : Range of line widths / um");
             sb.AppendLine("@@@@");
 
-            foreach (var line in result.LineMarks)
+            if (result.SampleSize == 0)
             {
-                double deltaL = ThermalCorrection(line.NominalPosition);
-
-                sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
-                    $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
-                    $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
-                    $"{line.LineCenterRange.ToString(outFormater).PadLeft(10)}" +
-                    $"{line.AverageLineWidth.ToString(outFormater).PadLeft(10)}" +
-                    $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
+                sb.AppendLine("*** No matching intensity pattern found ***");
             }
+            else
+            {
+                foreach (var line in result.LineMarks)
+                {
+                    double deltaL = ThermalCorrection(line.NominalPosition);
 
+                    sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
+                        $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
+                        $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
+                        $"{line.LineCenterRange.ToString(outFormater).PadLeft(10)}" +
+                        $"{line.AverageLineWidth.ToString(outFormater).PadLeft(10)}" +
+                        $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
+                }
+            }
             #region File output
             string outFileName;
             if (fileNames.Length >= 2)
