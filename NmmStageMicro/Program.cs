@@ -110,7 +110,7 @@ namespace NmmStageMicro
                 Classifier classifier = new Classifier(DoubleToInt(zData));
                 int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
                 // morphological filter
-                MorphoFilter filter = new MorphoFilter(skeleton);
+                MorphoFilter filter = new MorphoFilter(skeleton); // TODO implement morpho filter
                 // find line marks
                 LineDetector marks = new LineDetector(skeleton, xData);
                 ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
@@ -126,17 +126,20 @@ namespace NmmStageMicro
             sb.AppendLine($"SampleSpecies        = {theData.MetaData.SampleSpecies}");
             sb.AppendLine($"SampleSpecification  = {theData.MetaData.SampleSpecification}");
             sb.AppendLine($"ExpectedLineMarks    = {options.ExpectedTargets}");
-            sb.AppendLine($"NominalDivision      = {options.NominalDivision} um");
+            sb.AppendLine($"NominalDivision      = {options.NominalDivision} µm");
             sb.AppendLine($"ScaleType            = {result.ScaleType}");
             sb.AppendLine($"ThermalExpansion     = {options.Alpha.ToString("E2")} 1/K");
             // scan file specific data
             sb.AppendLine($"PointsPerProfile     = {theData.MetaData.NumberOfDataPoints}");
             sb.AppendLine($"Profiles             = {theData.MetaData.NumberOfProfiles}");
             sb.AppendLine($"InputChannels        = {theData.MetaData.NumberOfColumnsInFile}");
-            sb.AppendLine($"PointSpacing         = {(theData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} um");
-            sb.AppendLine($"ProfileSpacing       = {(theData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} um");
-            sb.AppendLine($"AngularOrientation   = {theData.MetaData.ScanFieldRotation:F2} grad");
-            sb.AppendLine($"ScanSpeed            = {theData.MetaData.ScanSpeed} um/s");
+            sb.AppendLine($"PointSpacing         = {(theData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} µm");
+            sb.AppendLine($"ProfileSpacing       = {(theData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} µm");
+            sb.AppendLine($"ScanFieldCenterX     = {theData.MetaData.ScanFieldCenterX * 1000:F1} mm");
+            sb.AppendLine($"ScanFieldCenterY     = {theData.MetaData.ScanFieldCenterY * 1000:F1} mm");
+            sb.AppendLine($"ScanFieldCenterZ     = {theData.MetaData.ScanFieldCenterZ * 1000:F1} mm");
+            sb.AppendLine($"AngularOrientation   = {theData.MetaData.ScanFieldRotation:F2}°");
+            sb.AppendLine($"ScanSpeed            = {theData.MetaData.ScanSpeed} µm/s");
             sb.AppendLine($"Probe                = {theData.MetaData.ProbeDesignation}");
             // evaluation parameters, user supplied
             sb.AppendLine($"X-AxisChannel        = {options.XAxisDesignation}");
@@ -146,7 +149,7 @@ namespace NmmStageMicro
             sb.AppendLine($"FilterParameter      = {options.Morpho}");
             sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
             double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
-            sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} um");
+            sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} µm");
             // auxiliary values 
             sb.AppendLine($"MinimumIntensity     = {eval.MinIntensity}");
             sb.AppendLine($"MaximumIntensity     = {eval.MaxIntensity}");
@@ -155,17 +158,17 @@ namespace NmmStageMicro
             sb.AppendLine($"RelativeSpan         = {relativeSpan:F1} %");
             sb.AppendLine($"EvaluatedProfiles    = {result.SampleSize}");
             // environmental data
-            sb.AppendLine($"SampleTemperature    = {theData.MetaData.SampleTemperature.ToString("F3")} oC");
-            sb.AppendLine($"AirTemperature       = {theData.MetaData.AirTemperature.ToString("F3")} oC");
+            sb.AppendLine($"SampleTemperature    = {theData.MetaData.SampleTemperature.ToString("F3")} °C");
+            sb.AppendLine($"AirTemperature       = {theData.MetaData.AirTemperature.ToString("F3")} °C");
             sb.AppendLine($"AirPressure          = {theData.MetaData.BarometricPressure.ToString("F0")} Pa");
             sb.AppendLine($"AirHumidity          = {theData.MetaData.RelativeHumidity.ToString("F1")} %");
             sb.AppendLine("======================");
             sb.AppendLine("1 : Line number (tag)");
-            sb.AppendLine("2 : Nominal value / um");
-            sb.AppendLine("3 : Position deviation / um");
-            sb.AppendLine("4 : Range of line position values / um");
-            sb.AppendLine("5 : Line width / um");
-            sb.AppendLine("6 : Range of line widths / um");
+            sb.AppendLine("2 : Nominal value / µm");
+            sb.AppendLine("3 : Position deviation / µm");
+            sb.AppendLine("4 : Range of line position values / µm");
+            sb.AppendLine("5 : Line width / µm");
+            sb.AppendLine("6 : Range of line widths / µm");
             sb.AppendLine("@@@@");
 
             if (result.SampleSize == 0)
@@ -186,6 +189,9 @@ namespace NmmStageMicro
                         $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
                 }
             }
+
+            Console.WriteLine(sb.ToString());
+
             #region File output
             string outFileName;
             if (fileNames.Length >= 2)
