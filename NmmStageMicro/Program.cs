@@ -135,6 +135,8 @@ namespace NmmStageMicro
             sb.AppendLine($"ScaleType            = {result.ScaleType}");
             sb.AppendLine($"ThermalExpansion     = {options.Alpha.ToString("E2")} 1/K");
             // scan file specific data
+            sb.AppendLine($"NumberOfScans        = {theData.MetaData.NumberOfScans}");
+            sb.AppendLine($"ScanIndex            = {theData.MetaData.ScanIndex}");
             sb.AppendLine($"PointsPerProfile     = {theData.MetaData.NumberOfDataPoints}");
             sb.AppendLine($"Profiles             = {theData.MetaData.NumberOfProfiles}");
             sb.AppendLine($"InputChannels        = {theData.MetaData.NumberOfColumnsInFile}");
