@@ -70,16 +70,21 @@ namespace NmmStageMicro
             if (options.RefLine < 0) options.RefLine = 0;
             if (options.RefLine >= options.ExpectedTargets) options.RefLine = options.ExpectedTargets - 1;
 
+            // output scan files peculiaritues
+            ConsoleUI.WriteLine();
+            ConsoleUI.WriteLine($"SpuriousDataLines: {theData.MetaData.SpuriousDataLines}");
+            ConsoleUI.WriteLine($"NumberOfGlitchedDataPoints: {theData.MetaData.NumberOfGlitchedDataPoints}");
+
             // some screen output
             ConsoleUI.WriteLine();
             ConsoleUI.WriteLine($"{theData.MetaData.NumberOfDataPoints} data lines with {theData.MetaData.NumberOfColumnsInFile} channels, organized in {theData.MetaData.NumberOfProfiles} profiles");
             ConsoleUI.WriteLine($"x-axis channel: {options.XAxisDesignation}");
             ConsoleUI.WriteLine($"z-axis channel: {options.ZAxisDesignation}");
-            ConsoleUI.WriteLine($"threshold: {options.Threshold}");
-            ConsoleUI.WriteLine($"morphological filter parameter: {options.Morpho}");
-            ConsoleUI.WriteLine($"trace: {topographyProcessType}");
-            ConsoleUI.WriteLine($"expected number of line marks: {options.ExpectedTargets}");
-            ConsoleUI.WriteLine($"nominal scale division: {options.NominalDivision} um");
+            ConsoleUI.WriteLine($"Threshold: {options.Threshold}");
+            ConsoleUI.WriteLine($"Morphological filter parameter: {options.Morpho}");
+            ConsoleUI.WriteLine($"Trace: {topographyProcessType}");
+            ConsoleUI.WriteLine($"Expected number of line marks: {options.ExpectedTargets}");
+            ConsoleUI.WriteLine($"Nominal scale division: {options.NominalDivision} um");
             ConsoleUI.WriteLine();
 
             // evaluate the intensities for ALL profiles == the whole scan field
@@ -88,8 +93,8 @@ namespace NmmStageMicro
             IntensityEvaluator eval = new IntensityEvaluator(DoubleToInt(luminanceField));
             ConsoleUI.Done();
             ConsoleUI.WriteLine();
-            ConsoleUI.WriteLine($"intensity range from {eval.MinIntensity} to {eval.MaxIntensity}");
-            ConsoleUI.WriteLine($"estimated bounds from {eval.LowerBound} to {eval.UpperBound}");
+            ConsoleUI.WriteLine($"Intensity range from {eval.MinIntensity} to {eval.MaxIntensity}");
+            ConsoleUI.WriteLine($"Estimated bounds from {eval.LowerBound} to {eval.UpperBound}");
             double relativeSpan = (double)(eval.UpperBound - eval.LowerBound) / (double)(eval.MaxIntensity - eval.MinIntensity) * 100.0;
             ConsoleUI.WriteLine($"({relativeSpan:F1} % of full range)");
             ConsoleUI.WriteLine();
@@ -140,6 +145,8 @@ namespace NmmStageMicro
             sb.AppendLine($"ScanFieldCenterZ     = {theData.MetaData.ScanFieldCenterZ * 1000:F1} mm");
             sb.AppendLine($"AngularOrientation   = {theData.MetaData.ScanFieldRotation:F2}°");
             sb.AppendLine($"ScanSpeed            = {theData.MetaData.ScanSpeed} µm/s");
+            sb.AppendLine($"GlitchedDataPoints   = {theData.MetaData.NumberOfGlitchedDataPoints}");
+            sb.AppendLine($"SpuriousDataLines    = {theData.MetaData.SpuriousDataLines}");
             sb.AppendLine($"Probe                = {theData.MetaData.ProbeDesignation}");
             // evaluation parameters, user supplied
             sb.AppendLine($"X-AxisChannel        = {options.XAxisDesignation}");
@@ -189,8 +196,6 @@ namespace NmmStageMicro
                         $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
                 }
             }
-
-            Console.WriteLine(sb.ToString());
 
             #region File output
             string outFileName;
