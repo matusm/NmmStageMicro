@@ -74,7 +74,7 @@ namespace NmmStageMicro
         {
             for (int i = 0; i < numberOfLineMarks; i++)
             {
-                LineMarks[i].NominalPosition = (double)(i-referenceIndex)*division;
+                LineMarks[i].NominalPosition = (i-referenceIndex)*division;
             }
         }
         #endregion

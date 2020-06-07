@@ -210,14 +210,14 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine();
             ConsoleUI.WritingFile(outFileName);
             StreamWriter hOutFile = File.CreateText(outFileName);
-            hOutFile.Write(sb.ToString());
+            hOutFile.Write(sb);
             hOutFile.Close();
             ConsoleUI.Done();
             #endregion
 
         }
 
-        // gives the thermal correction value in µm for a given length in µm
+        // gives the thermal correction value for a given length (both in the same unit)
         // return value must be added to the given length to obtain the true length
         private static double ThermalCorrection(double length)
         {
