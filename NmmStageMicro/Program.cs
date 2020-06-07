@@ -115,7 +115,8 @@ namespace NmmStageMicro
                 Classifier classifier = new Classifier(DoubleToInt(zData));
                 int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
                 // morphological filter
-                MorphoFilter filter = new MorphoFilter(skeleton); // TODO implement morpho filter
+                MorphoFilter filter = new MorphoFilter(skeleton);
+                skeleton = filter.FilterWithParameter(options.Morpho);
                 // find line marks
                 LineDetector marks = new LineDetector(skeleton, xData);
                 ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
