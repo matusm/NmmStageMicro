@@ -9,9 +9,19 @@
 
         public int[] FilterWithParameter(int filterParameter)
         {
-            Erode(filterParameter);
-            Dilate(filterParameter);
-
+            if (filterParameter > 0)
+            {
+                Erode(filterParameter);
+                Dilate(filterParameter);
+                return segmented;
+            }
+            if (filterParameter < 0)
+            {
+                Dilate(-filterParameter);
+                Erode(-filterParameter);
+                return segmented;
+            }
+            // filterParameter==0 -> do nothing
             return segmented;
         }
 
