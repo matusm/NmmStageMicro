@@ -121,6 +121,13 @@ namespace NmmStageMicro
                 LineDetector marks = new LineDetector(skeleton, xData);
                 ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
                 result.UpdateSample(marks.LineMarks, options.RefLine);
+                // debug *** output edges
+                if(options.EdgeOnly)
+                { 
+                    OutputEdges(marks);
+                    //Exit();
+                }
+                
             }
             // prepare output
             string outFormater = $"F{options.Precision}";
@@ -218,6 +225,21 @@ namespace NmmStageMicro
 
         }
 
+        private static void OutputEdges(LineDetector marks)
+        {
+            Console.WriteLine("position of left edges");
+            foreach (var edge in marks.LeftEdgePositions)
+            {
+                Console.WriteLine($"   {edge:F3} µm");
+            }
+            Console.WriteLine("position of right edges");
+            foreach (var edge in marks.RightEdgePositions)
+            {
+                Console.WriteLine($"   {edge:F3} µm");
+            }
+            Console.WriteLine();
+        }
+
         // gives the thermal correction value for a given length (both in the same unit)
         // return value must be added to the given length to obtain the true length
         private static double ThermalCorrection(double length)
@@ -227,7 +249,6 @@ namespace NmmStageMicro
             double deltaL = alpha * length * deltaT;
             return -deltaL;
         }
-
 
         private static int[] DoubleToInt(double[] rawIntensities)
         {
