@@ -45,7 +45,7 @@ namespace NmmStageMicro
         [Option("both", HelpText = "Mean of forward and backtrace profile (when present).")]
         public bool UseBoth { get; set; }
 
-        [Option('e', "edge", HelpText = "Extract edges only).")]
+        [Option('e', "edge", HelpText = "Extract edges only.")]
         public bool EdgeOnly { get; set; }
 
         [ValueList(typeof(List<string>), MaximumElements = 2)]

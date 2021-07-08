@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -16,6 +17,7 @@ namespace NmmStageMicro
         static string[] fileNames;
         static double[] xData;
         static double[] zData;
+        static StringBuilder edgesOnlyOutput = new StringBuilder();
 
         public static void Main(string[] args)
         {
@@ -114,18 +116,18 @@ namespace NmmStageMicro
                 // generate black/white profilen(a skeleton)
                 Classifier classifier = new Classifier(DoubleToInt(zData));
                 int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
-                // morphological filter
                 MorphoFilter filter = new MorphoFilter(skeleton);
                 skeleton = filter.FilterWithParameter(options.Morpho);
-                // find line marks
                 LineDetector marks = new LineDetector(skeleton, xData);
-                ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
+                if(!options.EdgeOnly)
+                {
+                    ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
+                }
                 result.UpdateSample(marks.LineMarks, options.RefLine);
-                // debug *** output edges
                 if(options.EdgeOnly)
-                { 
-                    OutputEdges(marks);
-                    //Exit();
+                {
+                    ConsoleUI.WriteLine($"profile: {profileIndex,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
+                    EdgesOnlyOutputToStringBuilder(marks, profileIndex);
                 }
                 
             }
@@ -138,9 +140,12 @@ namespace NmmStageMicro
             sb.AppendLine($"SampleIdentifier     = {theData.MetaData.SampleIdentifier}");
             sb.AppendLine($"SampleSpecies        = {theData.MetaData.SampleSpecies}");
             sb.AppendLine($"SampleSpecification  = {theData.MetaData.SampleSpecification}");
-            sb.AppendLine($"ExpectedLineMarks    = {options.ExpectedTargets}");
-            sb.AppendLine($"NominalDivision      = {options.NominalDivision} µm");
-            sb.AppendLine($"ScaleType            = {result.ScaleType}");
+            if (!options.EdgeOnly)
+            {
+                sb.AppendLine($"ExpectedLineMarks    = {options.ExpectedTargets}");
+                sb.AppendLine($"NominalDivision      = {options.NominalDivision} µm");
+                sb.AppendLine($"ScaleType            = {result.ScaleType}");
+            }
             sb.AppendLine($"ThermalExpansion     = {options.Alpha.ToString("E2")} 1/K");
             // scan file specific data
             sb.AppendLine($"NumberOfScans        = {theData.MetaData.NumberOfScans}");
@@ -164,9 +169,12 @@ namespace NmmStageMicro
             sb.AppendLine($"Trace                = {topographyProcessType}");
             sb.AppendLine($"Threshold            = {options.Threshold}");
             sb.AppendLine($"FilterParameter      = {options.Morpho}");
-            sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
-            double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
-            sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} µm");
+            if (!options.EdgeOnly)
+            {
+                sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
+                double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
+                sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} µm");
+            }
             // auxiliary values 
             sb.AppendLine($"MinimumIntensity     = {eval.MinIntensity}");
             sb.AppendLine($"MaximumIntensity     = {eval.MaxIntensity}");
@@ -180,32 +188,40 @@ namespace NmmStageMicro
             sb.AppendLine($"AirPressure          = {theData.MetaData.BarometricPressure.ToString("F0")} Pa");
             sb.AppendLine($"AirHumidity          = {theData.MetaData.RelativeHumidity.ToString("F1")} %");
             sb.AppendLine("======================");
-            sb.AppendLine("1 : Line number (tag)");
-            sb.AppendLine("2 : Nominal value / µm");
-            sb.AppendLine("3 : Position deviation / µm");
-            sb.AppendLine("4 : Range of line position values / µm");
-            sb.AppendLine("5 : Line width / µm");
-            sb.AppendLine("6 : Range of line widths / µm");
-            sb.AppendLine("@@@@");
-
-            if (result.SampleSize == 0)
+            if (!options.EdgeOnly)
             {
-                sb.AppendLine("*** No matching intensity pattern found ***");
-            }
-            else
-            {
-                foreach (var line in result.LineMarks)
+                sb.AppendLine("1 : Line number (tag)");
+                sb.AppendLine("2 : Nominal value / µm");
+                sb.AppendLine("3 : Position deviation / µm");
+                sb.AppendLine("4 : Range of line position values / µm");
+                sb.AppendLine("5 : Line width / µm");
+                sb.AppendLine("6 : Range of line widths / µm");
+                sb.AppendLine("@@@@");
+                if (result.SampleSize == 0)
                 {
-                    double deltaL = ThermalCorrection(line.NominalPosition);
-
-                    sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
-                        $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
-                        $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
-                        $"{line.LineCenterRange.ToString(outFormater).PadLeft(10)}" +
-                        $"{line.AverageLineWidth.ToString(outFormater).PadLeft(10)}" +
-                        $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
+                    sb.AppendLine("*** No matching intensity pattern found ***");
+                }
+                else
+                {
+                    foreach (var line in result.LineMarks)
+                    {
+                        double deltaL = ThermalCorrection(line.NominalPosition);
+                        sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
+                            $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
+                            $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
+                            $"{line.LineCenterRange.ToString(outFormater).PadLeft(10)}" +
+                            $"{line.AverageLineWidth.ToString(outFormater).PadLeft(10)}" +
+                            $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
+                    }
                 }
             }
+            if (!options.EdgeOnly)
+            {
+                sb.AppendLine("@@@@");
+                sb.AppendLine();
+                sb.Append(edgesOnlyOutput);
+            }
+
 
             #region File output
             string outFileName;
@@ -222,22 +238,27 @@ namespace NmmStageMicro
             hOutFile.Close();
             ConsoleUI.Done();
             #endregion
-
         }
 
-        private static void OutputEdges(LineDetector marks)
+        private static void EdgesOnlyOutputToStringBuilder(LineDetector marks, int profileIndex)
         {
-            Console.WriteLine("position of left edges");
-            foreach (var edge in marks.LeftEdgePositions)
+            List<double> leftEdges = marks.LeftEdgePositions;
+            List<double> rightEdges = marks.RightEdgePositions;
+            leftEdges.Sort();
+            rightEdges.Sort();
+            edgesOnlyOutput.AppendLine($"Edges found in profile {profileIndex}");
+            edgesOnlyOutput.AppendLine($"   Right edges, position in µm");
+            foreach (var edge in rightEdges)
             {
-                Console.WriteLine($"   {edge:F3} µm");
+                double deltaL = ThermalCorrection(edge);
+                edgesOnlyOutput.AppendLine($"      {edge+deltaL:F3}");
             }
-            Console.WriteLine("position of right edges");
-            foreach (var edge in marks.RightEdgePositions)
+            edgesOnlyOutput.AppendLine($"   Left edges, position in µm");
+            foreach (var edge in leftEdges)
             {
-                Console.WriteLine($"   {edge:F3} µm");
+                double deltaL = ThermalCorrection(edge);
+                edgesOnlyOutput.AppendLine($"      {edge+deltaL:F3}");
             }
-            Console.WriteLine();
         }
 
         // gives the thermal correction value for a given length (both in the same unit)
