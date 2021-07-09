@@ -48,6 +48,8 @@ namespace NmmStageMicro
         [Option('e', "edge", HelpText = "Extract edges only.")]
         public bool EdgeOnly { get; set; }
 
+        public bool LineScale => !EdgeOnly;
+
         [ValueList(typeof(List<string>), MaximumElements = 2)]
         public IList<string> ListOfFileNames { get; set; }
 

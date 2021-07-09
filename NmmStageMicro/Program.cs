@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using Bev.IO.NmmReader;
 using Bev.IO.NmmReader.scan_mode;
+using System.Globalization;
+using System.Threading;
 
 namespace NmmStageMicro
 {
@@ -21,6 +23,9 @@ namespace NmmStageMicro
 
         public static void Main(string[] args)
         {
+            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+
             // parse command line arguments
             if (!CommandLine.Parser.Default.ParseArgumentsStrict(args, options))
                 Console.WriteLine("*** ParseArgumentsStrict returned false");
@@ -85,8 +90,11 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine($"Threshold: {options.Threshold}");
             ConsoleUI.WriteLine($"Morphological filter parameter: {options.Morpho}");
             ConsoleUI.WriteLine($"Trace: {topographyProcessType}");
-            ConsoleUI.WriteLine($"Expected number of line marks: {options.ExpectedTargets}");
-            ConsoleUI.WriteLine($"Nominal scale division: {options.NominalDivision} um");
+            if (options.LineScale)
+            {
+                ConsoleUI.WriteLine($"Expected number of line marks: {options.ExpectedTargets}");
+                ConsoleUI.WriteLine($"Nominal scale division: {options.NominalDivision} um");
+            }
             ConsoleUI.WriteLine();
 
             // evaluate the intensities for ALL profiles == the whole scan field
@@ -119,7 +127,7 @@ namespace NmmStageMicro
                 MorphoFilter filter = new MorphoFilter(skeleton);
                 skeleton = filter.FilterWithParameter(options.Morpho);
                 LineDetector marks = new LineDetector(skeleton, xData);
-                if(!options.EdgeOnly)
+                if(options.LineScale)
                 {
                     ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
                 }
@@ -131,6 +139,8 @@ namespace NmmStageMicro
                 }
                 
             }
+
+
             // prepare output
             string outFormater = $"F{options.Precision}";
             StringBuilder sb = new StringBuilder();
@@ -140,7 +150,7 @@ namespace NmmStageMicro
             sb.AppendLine($"SampleIdentifier     = {theData.MetaData.SampleIdentifier}");
             sb.AppendLine($"SampleSpecies        = {theData.MetaData.SampleSpecies}");
             sb.AppendLine($"SampleSpecification  = {theData.MetaData.SampleSpecification}");
-            if (!options.EdgeOnly)
+            if (options.LineScale)
             {
                 sb.AppendLine($"ExpectedLineMarks    = {options.ExpectedTargets}");
                 sb.AppendLine($"NominalDivision      = {options.NominalDivision} µm");
@@ -169,7 +179,7 @@ namespace NmmStageMicro
             sb.AppendLine($"Trace                = {topographyProcessType}");
             sb.AppendLine($"Threshold            = {options.Threshold}");
             sb.AppendLine($"FilterParameter      = {options.Morpho}");
-            if (!options.EdgeOnly)
+            if (options.LineScale)
             {
                 sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
                 double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
@@ -181,14 +191,17 @@ namespace NmmStageMicro
             sb.AppendLine($"LowerPlateau         = {eval.LowerBound}");
             sb.AppendLine($"UpperPlateau         = {eval.UpperBound}");
             sb.AppendLine($"RelativeSpan         = {relativeSpan:F1} %");
-            sb.AppendLine($"EvaluatedProfiles    = {result.SampleSize}");
+            if(options.LineScale)
+            { 
+                sb.AppendLine($"EvaluatedProfiles    = {result.SampleSize}");
+            }
             // environmental data
             sb.AppendLine($"SampleTemperature    = {theData.MetaData.SampleTemperature.ToString("F3")} °C");
             sb.AppendLine($"AirTemperature       = {theData.MetaData.AirTemperature.ToString("F3")} °C");
             sb.AppendLine($"AirPressure          = {theData.MetaData.BarometricPressure.ToString("F0")} Pa");
             sb.AppendLine($"AirHumidity          = {theData.MetaData.RelativeHumidity.ToString("F1")} %");
             sb.AppendLine("======================");
-            if (!options.EdgeOnly)
+            if (options.LineScale)
             {
                 sb.AppendLine("1 : Line number (tag)");
                 sb.AppendLine("2 : Nominal value / µm");
@@ -215,13 +228,12 @@ namespace NmmStageMicro
                     }
                 }
             }
-            if (!options.EdgeOnly)
+            if (options.EdgeOnly)
             {
-                sb.AppendLine("@@@@");
-                sb.AppendLine();
+                //sb.AppendLine("@@@@");
+                //sb.AppendLine("");
                 sb.Append(edgesOnlyOutput);
             }
-
 
             #region File output
             string outFileName;
