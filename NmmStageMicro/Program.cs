@@ -140,7 +140,6 @@ namespace NmmStageMicro
                 
             }
 
-
             // prepare output
             string outFormater = $"F{options.Precision}";
             StringBuilder sb = new StringBuilder();
@@ -230,8 +229,6 @@ namespace NmmStageMicro
             }
             if (options.EdgeOnly)
             {
-                //sb.AppendLine("@@@@");
-                //sb.AppendLine("");
                 sb.Append(edgesOnlyOutput);
             }
 
@@ -259,13 +256,13 @@ namespace NmmStageMicro
             leftEdges.Sort();
             rightEdges.Sort();
             edgesOnlyOutput.AppendLine($"Edges found in profile {profileIndex}");
-            edgesOnlyOutput.AppendLine($"   Right edges, position in µm");
+            edgesOnlyOutput.AppendLine($"   Right edges ({rightEdges.Count}), position in µm");
             foreach (var edge in rightEdges)
             {
                 double deltaL = ThermalCorrection(edge);
                 edgesOnlyOutput.AppendLine($"      {edge+deltaL:F3}");
             }
-            edgesOnlyOutput.AppendLine($"   Left edges, position in µm");
+            edgesOnlyOutput.AppendLine($"   Left edges ({leftEdges.Count}), position in µm");
             foreach (var edge in leftEdges)
             {
                 double deltaL = ThermalCorrection(edge);
