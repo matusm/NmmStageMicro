@@ -255,7 +255,7 @@ namespace NmmStageMicro
             List<double> rightEdges = marks.RightEdgePositions;
             leftEdges.Sort();
             rightEdges.Sort();
-            edgesOnlyOutput.AppendLine($"Edges found in profile {profileIndex}");
+            edgesOnlyOutput.AppendLine($"Profile {profileIndex}");
             edgesOnlyOutput.AppendLine($"   Right edges ({rightEdges.Count}), position in µm");
             foreach (var edge in rightEdges)
             {

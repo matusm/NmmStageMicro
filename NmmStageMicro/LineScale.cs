@@ -73,16 +73,6 @@ namespace NmmStageMicro
             }
         }
 
-        //private void BuildLocalLineMarks()
-        //{
-        //    localLineMarks = new LineMark[LineMarks.Length];
-        //    for (int i = 0; i < localLineMarks.Length; i++)
-        //    {
-        //        localLineMarks[i] = new LineMark(LineMarks[i]);
-        //    }
-        //}
-
-        // private LineMark[] localLineMarks;
         private readonly int numberOfLineMarks;
     }
 }
