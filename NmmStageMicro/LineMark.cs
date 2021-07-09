@@ -32,7 +32,6 @@ namespace NmmStageMicro
     class LineMark
     {
 
-        #region Ctor
         public LineMark(int tag)
         {
             Tag = tag;
@@ -52,9 +51,7 @@ namespace NmmStageMicro
             widthMax = clone.widthMax;
             widthMin = clone.widthMin;
         }
-        #endregion
 
-        #region Properties
         public double NominalPosition { get; set; }
         public ScaleMarkType ScaleType => scaleType;
         public int SampleSize { get; private set; }
@@ -64,9 +61,7 @@ namespace NmmStageMicro
         public double LineCenterRange => centerMax - centerMin;
         public double LineWidthRange => widthMax - widthMin;
         public double Deviation => AverageLineCenter - NominalPosition;
-        #endregion
 
-        #region Methods
         public void Update(SimpleLineMark simpleLineMark)
         {
             Update(simpleLineMark, new SimpleLineMark(0, 0));
@@ -93,9 +88,7 @@ namespace NmmStageMicro
             if (simpleLineMark.LineWidth > widthMax) widthMax = simpleLineMark.LineWidth;
             if (simpleLineMark.LineWidth < widthMin) widthMin = simpleLineMark.LineWidth;
         }
-        #endregion
 
-        #region Private stuff
         public override string ToString()
         {
             return $"LineMark {Tag}, deviation {Deviation:F3}, width {AverageLineWidth:F3}";
@@ -106,7 +99,6 @@ namespace NmmStageMicro
         private double centerMin;
         private double widthMin;
         private double widthMax;
-        #endregion
 
     }
 }

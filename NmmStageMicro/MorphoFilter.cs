@@ -7,7 +7,6 @@ namespace NmmStageMicro
         private int[] h1;
         private int[] h2;
 
-
         public MorphoFilter(int[] originalProfile)
         {
             h1 = new int[originalProfile.Length];

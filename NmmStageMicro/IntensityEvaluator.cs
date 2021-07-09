@@ -14,7 +14,7 @@ namespace NmmStageMicro
 {
     public class IntensityEvaluator
     {
-        #region Ctor
+
         public IntensityEvaluator(int[] intensities)
         {
             this.intensities = intensities;
@@ -26,21 +26,13 @@ namespace NmmStageMicro
             lowerBound = FindPeak(0.0, 0.5);
             upperBound = FindPeak(0.5, 1.0);
         }
-        #endregion
 
-        #region Properties
-        public int MaxIntensity { get { return maxIntensity; } }
-
-        public int MinIntensity { get { return minIntensity; } }
-
-        public int LowerBound { get { return lowerBound; } }
-
-        public int UpperBound { get { return upperBound; } }
-
+        public int MaxIntensity => maxIntensity;
+        public int MinIntensity => minIntensity;
+        public int LowerBound => lowerBound;
+        public int UpperBound => upperBound;
         public int[] Histogram { get; private set; }
-        #endregion
 
-        #region Private stuff
         // local fields are necessary
         // using computed properties will make the class extremly slow
         private readonly int[] intensities;
@@ -84,6 +76,5 @@ namespace NmmStageMicro
             }
             return peakPosition + minIntensity;
         }
-        #endregion
     }
 }

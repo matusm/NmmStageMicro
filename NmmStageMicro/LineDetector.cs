@@ -15,7 +15,6 @@ namespace NmmStageMicro
 {
     class LineDetector
     {
-        #region Ctor
         public LineDetector(int[] segmentedProfile, double[] xData)
         {
             this.segmentedProfile = segmentedProfile;
@@ -25,16 +24,12 @@ namespace NmmStageMicro
             // find line marks from the edges
             LineFinder();
         }
-        #endregion
 
-        #region Properties
         public List<SimpleLineMark> LineMarks { get; private set; } = new List<SimpleLineMark>();
         public int LineCount => LineMarks.Count;
         public List<double> LeftEdgePositions { get; private set; } = new List<double>();
         public List<double> RightEdgePositions { get; private set; } = new List<double>();
-        #endregion
 
-        #region Private stuff
         private void EdgeDetector()
         {
             for (int i = 1; i < segmentedProfile.Length; i++)
@@ -56,7 +51,6 @@ namespace NmmStageMicro
 
         private readonly int[] segmentedProfile;
         private readonly double[] xData;
-        #endregion
 
     }
 }

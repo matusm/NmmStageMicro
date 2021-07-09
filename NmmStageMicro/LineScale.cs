@@ -17,7 +17,6 @@ namespace NmmStageMicro
     class LineScale
     {
 
-        #region Ctor
         public LineScale(int numberOfLineMarks)
         {
             this.numberOfLineMarks = numberOfLineMarks;
@@ -27,15 +26,11 @@ namespace NmmStageMicro
                 LineMarks[i] = new LineMark(i);
             }
         }
-        #endregion
 
-        #region Properties
         public LineMark[] LineMarks { get; }
         public int SampleSize => LineMarks[0].SampleSize;
         public ScaleMarkType ScaleType => LineMarks[0].ScaleType;
-        #endregion
 
-        #region Methods
         // updates all line marks at once with a given sample, referenced to a given line
         public void UpdateSample(List<SimpleLineMark> simpleLineMarks, int referenceIndex)
         {
@@ -77,18 +72,17 @@ namespace NmmStageMicro
                 LineMarks[i].NominalPosition = (i-referenceIndex)*division;
             }
         }
-        #endregion
 
-        private void BuildLocalLineMarks()
-        {
-            localLineMarks = new LineMark[LineMarks.Length];
-            for (int i = 0; i < localLineMarks.Length; i++)
-            {
-                localLineMarks[i] = new LineMark(LineMarks[i]);
-            }
-        }
+        //private void BuildLocalLineMarks()
+        //{
+        //    localLineMarks = new LineMark[LineMarks.Length];
+        //    for (int i = 0; i < localLineMarks.Length; i++)
+        //    {
+        //        localLineMarks[i] = new LineMark(LineMarks[i]);
+        //    }
+        //}
 
-        private LineMark[] localLineMarks;
+        // private LineMark[] localLineMarks;
         private readonly int numberOfLineMarks;
     }
 }
