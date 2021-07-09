@@ -16,7 +16,7 @@ using System;
 
 namespace NmmStageMicro
 {
-    public class SimpleLineMark : IComparable
+    public class SimpleLineMark : IComparable<SimpleLineMark>
     {
         public SimpleLineMark(double leftPos, double rightPos)
         {
@@ -34,9 +34,9 @@ namespace NmmStageMicro
         public double LineWidth => Math.Abs(LeftEdgePosition - RightEdgePosition);
         public ScaleMarkType LineType { get; private set; }
 
-        public int CompareTo(object obj)
+        public int CompareTo(SimpleLineMark other)
         {
-            return LineCenter.CompareTo(obj);
+            return LineCenter.CompareTo(other.LineCenter);
         }
     }
 
