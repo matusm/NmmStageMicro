@@ -17,8 +17,8 @@ namespace NmmStageMicro
         static NmmScanData theData;
         static TopographyProcessType topographyProcessType;
         static string[] fileNames;
-        static double[] xData;
-        static double[] zData;
+        //static double[] xData;
+        //static double[] zData;
         static StringBuilder edgesOnlyOutput = new StringBuilder();
 
         public static void Main(string[] args)
@@ -112,20 +112,26 @@ namespace NmmStageMicro
             LineScale result = new LineScale(options.ExpectedTargets);
             result.SetNominalValues(options.NominalDivision, options.RefLine);
 
-            // the loop over all profiles
-            for (int profileIndex = 1; profileIndex <= theData.MetaData.NumberOfProfiles; profileIndex++)
+            // wraps profiles extracted from NMM files to a more abstract structure: profiles
+            IntensityProfile[] profiles = new IntensityProfile[theData.MetaData.NumberOfProfiles];
+            for (int profileIndex = 1; profileIndex <= profiles.Length; profileIndex++)
             {
-                xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex, topographyProcessType);
-                zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex, topographyProcessType);
+                double[] xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex, topographyProcessType);
+                double[] zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex, topographyProcessType);
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] = xData[i] * 1.0e6;
-                // generate black/white profilen(a skeleton)
-                Classifier classifier = new Classifier(DoubleToInt(zData));
+                profiles[profileIndex] = new IntensityProfile(xData, zData);
+            }
+
+            // the loop over all profiles
+            for (int profileIndex = 1; profileIndex <= profiles.Length; profileIndex++)
+            {
+                Classifier classifier = new Classifier(profiles[profileIndex].Zvalues);
                 int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
                 MorphoFilter filter = new MorphoFilter(skeleton);
                 skeleton = filter.FilterWithParameter(options.Morpho);
-                LineDetector marks = new LineDetector(skeleton, xData);
+                LineDetector marks = new LineDetector(skeleton, profiles[profileIndex].Xvalues);
                 if(options.LineScale)
                 {
                     ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");

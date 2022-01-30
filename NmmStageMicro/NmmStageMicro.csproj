@@ -27,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classifier.cs" />
+    <Compile Include="IntensityProfile.cs" />
     <Compile Include="LineMark.cs" />
     <Compile Include="SimpleLineMark.cs" />
     <Compile Include="LineScale.cs" />
