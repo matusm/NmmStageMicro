@@ -9,16 +9,16 @@ namespace NmmStageMicro
         [Option('s', "scan", DefaultValue = 0, HelpText = "Scan index for multi-scan files.")]
         public int ScanIndex { get; set; }
 
-        [Option('X', "X-axis", DefaultValue = "XYvec", HelpText = "Channel for x-axis")]
+        [Option('X', "X-axis", DefaultValue = "XYvec", HelpText = "Channel for x-axis.")]
         public string XAxisDesignation { get; set; }
 
-        [Option('Z', "Z-axis", DefaultValue = "AX", HelpText = "Channel for z-axis (brightness)")]
+        [Option('Z', "Z-axis", DefaultValue = "AX", HelpText = "Channel for z-axis (brightness).")]
         public string ZAxisDesignation { get; set; }
 
-        [Option("precision", DefaultValue = 2, HelpText = "Decimal digits for results")]
+        [Option("precision", DefaultValue = 3, HelpText = "Decimal digits for results.")]
         public int Precision { get; set; }
 
-        [Option('d', "div", DefaultValue = 0, HelpText = "Nominal scale division in um")]
+        [Option('d', "div", DefaultValue = 0, HelpText = "Nominal scale division in um.")]
         public double NominalDivision { get; set; }
 
         [Option('n', "nlines", DefaultValue = 0, HelpText = "Expected number of line marks.")]
@@ -27,7 +27,7 @@ namespace NmmStageMicro
         [Option('r', "reference", DefaultValue = 0, HelpText = "Line mark # to reference to.")]
         public int RefLine { get; set; }
 
-        [Option("alpha", DefaultValue = 0.0, HelpText = "Thermal expansion coefficient in 1/K")]
+        [Option("alpha", DefaultValue = 0.0, HelpText = "Thermal expansion coefficient in 1/K.")]
         public double Alpha { get; set; }
 
         [Option('m', "morpho", DefaultValue = 25, HelpText = "Kernel value of morphological filter.")]

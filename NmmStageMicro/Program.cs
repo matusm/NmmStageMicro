@@ -25,7 +25,6 @@ namespace NmmStageMicro
         {
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 
-
             // parse command line arguments
             if (!CommandLine.Parser.Default.ParseArgumentsStrict(args, options))
                 Console.WriteLine("*** ParseArgumentsStrict returned false");
@@ -48,8 +47,12 @@ namespace NmmStageMicro
             nmmFileNameObject.SetScanIndex(options.ScanIndex);
             theData = new NmmScanData(nmmFileNameObject);
             ConsoleUI.Done();
-            // TODO check if data present
-          
+
+            // check if data present
+            if (theData.MetaData.ScanStatus == ScanDirectionStatus.Unknown)
+                ConsoleUI.ErrorExit("!Unknown scan type", 4);
+            if (theData.MetaData.ScanStatus == ScanDirectionStatus.NoData)
+                ConsoleUI.ErrorExit("!No scan data present", 5);
 
             // Check if requested channels are present in raw data
             if (!theData.ColumnPresent(options.XAxisDesignation))
@@ -68,10 +71,6 @@ namespace NmmStageMicro
                     ConsoleUI.WriteLine("No backward scan data present, switching to forward only.");
                 topographyProcessType = TopographyProcessType.ForwardOnly;
             }
-            if (theData.MetaData.ScanStatus == ScanDirectionStatus.Unknown)
-                ConsoleUI.ErrorExit("!Unknown scan type", 4);
-            if (theData.MetaData.ScanStatus == ScanDirectionStatus.NoData)
-                ConsoleUI.ErrorExit("!No scan data present", 5);
 
             // one must avoid referencing to an line outside of expected number of line marks
             if (options.RefLine < 0) options.RefLine = 0;
@@ -137,7 +136,6 @@ namespace NmmStageMicro
                     ConsoleUI.WriteLine($"profile: {profileIndex,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
                     EdgesOnlyOutputToStringBuilder(marks, profileIndex);
                 }
-                
             }
 
             // prepare output
@@ -271,23 +269,19 @@ namespace NmmStageMicro
         }
 
         // gives the thermal correction value for a given length (both in the same unit)
-        // return value must be added to the given length to obtain the true length
+        // return value must be added to the given length to obtain the length at reference temperature
         private static double ThermalCorrection(double length)
         {
+            double referenceTemperature = 20;
             double alpha = options.Alpha;
-            double deltaT = theData.MetaData.SampleTemperature - 20.0;
+            double deltaT = theData.MetaData.SampleTemperature - referenceTemperature;
             double deltaL = alpha * length * deltaT;
             return -deltaL;
         }
 
         private static int[] DoubleToInt(double[] rawIntensities)
         {
-            int[] result = new int[rawIntensities.Length];
-            for (int i = 0; i < result.Length; i++)
-            {
-                result[i] = (int)rawIntensities[i];
-            }
-            return result;
+            return rawIntensities.Select(x => Convert.ToInt32(x)).ToArray();
         }
 
     }
