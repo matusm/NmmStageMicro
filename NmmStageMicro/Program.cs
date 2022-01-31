@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using Bev.IO.NmmReader;
 using Bev.IO.NmmReader.scan_mode;
-using System.Globalization;
-using System.Threading;
 
 namespace NmmStageMicro
 {
@@ -15,10 +14,7 @@ namespace NmmStageMicro
         static readonly Options options = new Options();
         static NmmFileName nmmFileNameObject;
         static NmmScanData theData;
-        static TopographyProcessType topographyProcessType;
         static string[] fileNames;
-        //static double[] xData;
-        //static double[] zData;
         static StringBuilder edgesOnlyOutput = new StringBuilder();
 
         public static void Main(string[] args)
@@ -60,18 +56,6 @@ namespace NmmStageMicro
             if (!theData.ColumnPresent(options.ZAxisDesignation))
                 ConsoleUI.ErrorExit($"!Requested channel {options.ZAxisDesignation} not in data files", 3);
 
-            topographyProcessType = TopographyProcessType.ForwardOnly;
-            if (options.UseBack)
-                topographyProcessType = TopographyProcessType.BackwardOnly;
-            if (options.UseBoth)
-                topographyProcessType = TopographyProcessType.Average;
-            if (theData.MetaData.ScanStatus == ScanDirectionStatus.ForwardOnly)
-            {
-                if (topographyProcessType != TopographyProcessType.ForwardOnly)
-                    ConsoleUI.WriteLine("No backward scan data present, switching to forward only.");
-                topographyProcessType = TopographyProcessType.ForwardOnly;
-            }
-
             // one must avoid referencing to an line outside of expected number of line marks
             if (options.RefLine < 0) options.RefLine = 0;
             if (options.RefLine >= options.ExpectedTargets) options.RefLine = options.ExpectedTargets - 1;
@@ -88,7 +72,6 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine($"z-axis channel: {options.ZAxisDesignation}");
             ConsoleUI.WriteLine($"Threshold: {options.Threshold}");
             ConsoleUI.WriteLine($"Morphological filter parameter: {options.Morpho}");
-            ConsoleUI.WriteLine($"Trace: {topographyProcessType}");
             if (options.LineScale)
             {
                 ConsoleUI.WriteLine($"Expected number of line marks: {options.ExpectedTargets}");
@@ -98,7 +81,7 @@ namespace NmmStageMicro
 
             // evaluate the intensities for ALL profiles == the whole scan field
             ConsoleUI.StartOperation("Classifying intensity data");
-            double[] luminanceField = theData.ExtractProfile(options.ZAxisDesignation, 0, topographyProcessType);
+            double[] luminanceField = theData.ExtractProfile(options.ZAxisDesignation, 0, TopographyProcessType.ForwardOnly);
             IntensityEvaluator eval = new IntensityEvaluator(luminanceField);
             ConsoleUI.Done();
             ConsoleUI.WriteLine();
@@ -109,39 +92,36 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine();
 
             // prepare object for the overall dimensional result
-            LineScale resultFW = new LineScale(options.ExpectedTargets);
-            resultFW.SetNominalValues(options.NominalDivision, options.RefLine);
+            LineScale result = new LineScale(options.ExpectedTargets);
+            result.SetNominalValues(options.NominalDivision, options.RefLine);
 
             // wraps profiles extracted from NMM files to a more abstract structure: profiles
-            IntensityProfile[] profilesFW = new IntensityProfile[theData.MetaData.NumberOfProfiles];
-            for (int profileIndex = 0; profileIndex < profilesFW.Length; profileIndex++)
+            List<IntensityProfile> profilesList = new List<IntensityProfile>();
+            WarpNmmProfiles(TopographyProcessType.ForwardOnly, profilesList);
+            if (theData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackward || theData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackwardJustified)
             {
-                double[] xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex+1, topographyProcessType);
-                double[] zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex+1, topographyProcessType);
-                // convert Xdata from meter to micrometer
-                for (int i = 0; i < xData.Length; i++)
-                    xData[i] = xData[i] * 1.0e6;
-                profilesFW[profileIndex] = new IntensityProfile(xData, zData);
+                WarpNmmProfiles(TopographyProcessType.BackwardOnly, profilesList);
             }
+            IntensityProfile[] profiles = profilesList.ToArray();
 
             // the loop over all profiles
-            for (int profileIndex = 0; profileIndex < profilesFW.Length; profileIndex++)
+            for (int profileIndex = 0; profileIndex < profiles.Length; profileIndex++)
             {
-                if (!profilesFW[profileIndex].IsValid)
+                if (!profiles[profileIndex].IsValid)
                 {
                     ConsoleUI.ErrorExit($"!Profile {profileIndex} invalid", 6);
                 }
-                Classifier classifier = new Classifier(profilesFW[profileIndex].Zvalues);
+                Classifier classifier = new Classifier(profiles[profileIndex].Zvalues);
                 int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
                 MorphoFilter filter = new MorphoFilter(skeleton);
                 skeleton = filter.FilterWithParameter(options.Morpho);
-                LineDetector marks = new LineDetector(skeleton, profilesFW[profileIndex].Xvalues);
-                if(options.LineScale)
+                LineDetector marks = new LineDetector(skeleton, profiles[profileIndex].Xvalues);
+                if (options.LineScale)
                 {
                     ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
                 }
-                resultFW.UpdateSample(marks.LineMarks, options.RefLine);
-                if(options.EdgeOnly)
+                result.UpdateSample(marks.LineMarks, options.RefLine);
+                if (options.EdgeOnly)
                 {
                     ConsoleUI.WriteLine($"profile: {profileIndex,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
                     EdgesOnlyOutputToStringBuilder(marks, profileIndex);
@@ -162,7 +142,7 @@ namespace NmmStageMicro
             {
                 sb.AppendLine($"ExpectedLineMarks    = {options.ExpectedTargets}");
                 sb.AppendLine($"NominalDivision      = {options.NominalDivision} µm");
-                sb.AppendLine($"ScaleType            = {resultFW.ScaleType}");
+                sb.AppendLine($"ScaleType            = {result.ScaleType}");
             }
             sb.AppendLine($"ThermalExpansion     = {options.Alpha.ToString("E2")} 1/K");
             // scan file specific data
@@ -184,13 +164,12 @@ namespace NmmStageMicro
             // evaluation parameters, user supplied
             sb.AppendLine($"X-AxisChannel        = {options.XAxisDesignation}");
             sb.AppendLine($"Z-AxisChannel        = {options.ZAxisDesignation}");
-            sb.AppendLine($"Trace                = {topographyProcessType}");
             sb.AppendLine($"Threshold            = {options.Threshold}");
             sb.AppendLine($"FilterParameter      = {options.Morpho}");
             if (options.LineScale)
             {
                 sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
-                double maximumThermalCorrection = ThermalCorrection(resultFW.LineMarks.Last().NominalPosition) - ThermalCorrection(resultFW.LineMarks.First().NominalPosition);
+                double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
                 sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} µm");
             }
             // auxiliary values 
@@ -199,9 +178,9 @@ namespace NmmStageMicro
             sb.AppendLine($"LowerPlateau         = {eval.LowerBound}");
             sb.AppendLine($"UpperPlateau         = {eval.UpperBound}");
             sb.AppendLine($"RelativeSpan         = {relativeSpan:F1} %");
-            if(options.LineScale)
-            { 
-                sb.AppendLine($"EvaluatedProfiles    = {resultFW.SampleSize}");
+            if (options.LineScale)
+            {
+                sb.AppendLine($"EvaluatedProfiles    = {result.SampleSize}");
             }
             // environmental data
             sb.AppendLine($"SampleTemperature    = {theData.MetaData.SampleTemperature.ToString("F3")} °C");
@@ -218,13 +197,13 @@ namespace NmmStageMicro
                 sb.AppendLine("5 : Line width / µm");
                 sb.AppendLine("6 : Range of line widths / µm");
                 sb.AppendLine("@@@@");
-                if (resultFW.SampleSize == 0)
+                if (result.SampleSize == 0)
                 {
                     sb.AppendLine("*** No matching intensity pattern found ***");
                 }
                 else
                 {
-                    foreach (var line in resultFW.LineMarks)
+                    foreach (var line in result.LineMarks)
                     {
                         double deltaL = ThermalCorrection(line.NominalPosition);
                         sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
@@ -259,6 +238,19 @@ namespace NmmStageMicro
             #endregion
         }
 
+        private static void WarpNmmProfiles(TopographyProcessType processType, List<IntensityProfile> tempList)
+        {
+            for (int profileIndex = 0; profileIndex < theData.MetaData.NumberOfProfiles; profileIndex++)
+            {
+                double[] xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex + 1, processType);
+                double[] zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex + 1, processType);
+                // convert Xdata from meter to micrometer
+                for (int i = 0; i < xData.Length; i++)
+                    xData[i] = xData[i] * 1.0e6;
+                tempList.Add(new IntensityProfile(xData, zData));
+            }
+        }
+
         private static void EdgesOnlyOutputToStringBuilder(LineDetector marks, int profileIndex)
         {
             List<double> leftEdges = marks.LeftEdgePositions;
@@ -270,13 +262,13 @@ namespace NmmStageMicro
             foreach (var edge in rightEdges)
             {
                 double deltaL = ThermalCorrection(edge);
-                edgesOnlyOutput.AppendLine($"      {edge+deltaL:F3}");
+                edgesOnlyOutput.AppendLine($"      {edge + deltaL:F3}");
             }
             edgesOnlyOutput.AppendLine($"   Left edges ({leftEdges.Count}), position in µm");
             foreach (var edge in leftEdges)
             {
                 double deltaL = ThermalCorrection(edge);
-                edgesOnlyOutput.AppendLine($"      {edge+deltaL:F3}");
+                edgesOnlyOutput.AppendLine($"      {edge + deltaL:F3}");
             }
         }
 

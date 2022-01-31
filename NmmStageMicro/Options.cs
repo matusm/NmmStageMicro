@@ -39,12 +39,6 @@ namespace NmmStageMicro
         [Option('q', "quiet", HelpText = "Quiet mode. No screen output (except for errors).")]
         public bool BeQuiet { get; set; }
 
-        [Option("back", HelpText = "Use backtrace profile only (when present).")]
-        public bool UseBack { get; set; }
-
-        [Option("both", HelpText = "Mean of forward and backtrace profile (when present).")]
-        public bool UseBoth { get; set; }
-
         [Option('e', "edge", HelpText = "Extract edges only.")]
         public bool EdgeOnly { get; set; }
 
