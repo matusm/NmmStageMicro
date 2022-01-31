@@ -17,13 +17,19 @@ namespace NmmStageMicro
 
         public IntensityProfile(double[] xvalues, double[] zvalues) : this (xvalues, zvalues.Select(x => Convert.ToInt32(x)).ToArray()) {}
 
-        public bool ProfileIsValid()
+        private bool ProfileIsValid()
         {
             if (Xvalues == null) return false;
             if (Zvalues == null) return false;
             if (Xvalues.Length != Zvalues.Length) return false;
             if (Xvalues.Length < 2) return false;
-            return false;
+            return true;
+        }
+
+        public override string ToString()
+        {
+            if (Xvalues == null) return "[null]";
+            return $"[Xvalues:{Xvalues.Length} Yvalues:{Zvalues.Length}]";
         }
     }
 }

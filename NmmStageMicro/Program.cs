@@ -99,7 +99,7 @@ namespace NmmStageMicro
             // evaluate the intensities for ALL profiles == the whole scan field
             ConsoleUI.StartOperation("Classifying intensity data");
             double[] luminanceField = theData.ExtractProfile(options.ZAxisDesignation, 0, topographyProcessType);
-            IntensityEvaluator eval = new IntensityEvaluator(DoubleToInt(luminanceField));
+            IntensityEvaluator eval = new IntensityEvaluator(luminanceField);
             ConsoleUI.Done();
             ConsoleUI.WriteLine();
             ConsoleUI.WriteLine($"Intensity range from {eval.MinIntensity} to {eval.MaxIntensity}");
@@ -109,34 +109,38 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine();
 
             // prepare object for the overall dimensional result
-            LineScale result = new LineScale(options.ExpectedTargets);
-            result.SetNominalValues(options.NominalDivision, options.RefLine);
+            LineScale resultFW = new LineScale(options.ExpectedTargets);
+            resultFW.SetNominalValues(options.NominalDivision, options.RefLine);
 
             // wraps profiles extracted from NMM files to a more abstract structure: profiles
-            IntensityProfile[] profiles = new IntensityProfile[theData.MetaData.NumberOfProfiles];
-            for (int profileIndex = 1; profileIndex <= profiles.Length; profileIndex++)
+            IntensityProfile[] profilesFW = new IntensityProfile[theData.MetaData.NumberOfProfiles];
+            for (int profileIndex = 0; profileIndex < profilesFW.Length; profileIndex++)
             {
-                double[] xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex, topographyProcessType);
-                double[] zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex, topographyProcessType);
+                double[] xData = theData.ExtractProfile(options.XAxisDesignation, profileIndex+1, topographyProcessType);
+                double[] zData = theData.ExtractProfile(options.ZAxisDesignation, profileIndex+1, topographyProcessType);
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] = xData[i] * 1.0e6;
-                profiles[profileIndex] = new IntensityProfile(xData, zData);
+                profilesFW[profileIndex] = new IntensityProfile(xData, zData);
             }
 
             // the loop over all profiles
-            for (int profileIndex = 1; profileIndex <= profiles.Length; profileIndex++)
+            for (int profileIndex = 0; profileIndex < profilesFW.Length; profileIndex++)
             {
-                Classifier classifier = new Classifier(profiles[profileIndex].Zvalues);
+                if (!profilesFW[profileIndex].IsValid)
+                {
+                    ConsoleUI.ErrorExit($"!Profile {profileIndex} invalid", 6);
+                }
+                Classifier classifier = new Classifier(profilesFW[profileIndex].Zvalues);
                 int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
                 MorphoFilter filter = new MorphoFilter(skeleton);
                 skeleton = filter.FilterWithParameter(options.Morpho);
-                LineDetector marks = new LineDetector(skeleton, profiles[profileIndex].Xvalues);
+                LineDetector marks = new LineDetector(skeleton, profilesFW[profileIndex].Xvalues);
                 if(options.LineScale)
                 {
                     ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
                 }
-                result.UpdateSample(marks.LineMarks, options.RefLine);
+                resultFW.UpdateSample(marks.LineMarks, options.RefLine);
                 if(options.EdgeOnly)
                 {
                     ConsoleUI.WriteLine($"profile: {profileIndex,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
@@ -144,6 +148,7 @@ namespace NmmStageMicro
                 }
             }
 
+            #region output
             // prepare output
             string outFormater = $"F{options.Precision}";
             StringBuilder sb = new StringBuilder();
@@ -157,7 +162,7 @@ namespace NmmStageMicro
             {
                 sb.AppendLine($"ExpectedLineMarks    = {options.ExpectedTargets}");
                 sb.AppendLine($"NominalDivision      = {options.NominalDivision} µm");
-                sb.AppendLine($"ScaleType            = {result.ScaleType}");
+                sb.AppendLine($"ScaleType            = {resultFW.ScaleType}");
             }
             sb.AppendLine($"ThermalExpansion     = {options.Alpha.ToString("E2")} 1/K");
             // scan file specific data
@@ -185,7 +190,7 @@ namespace NmmStageMicro
             if (options.LineScale)
             {
                 sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
-                double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
+                double maximumThermalCorrection = ThermalCorrection(resultFW.LineMarks.Last().NominalPosition) - ThermalCorrection(resultFW.LineMarks.First().NominalPosition);
                 sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} µm");
             }
             // auxiliary values 
@@ -196,7 +201,7 @@ namespace NmmStageMicro
             sb.AppendLine($"RelativeSpan         = {relativeSpan:F1} %");
             if(options.LineScale)
             { 
-                sb.AppendLine($"EvaluatedProfiles    = {result.SampleSize}");
+                sb.AppendLine($"EvaluatedProfiles    = {resultFW.SampleSize}");
             }
             // environmental data
             sb.AppendLine($"SampleTemperature    = {theData.MetaData.SampleTemperature.ToString("F3")} °C");
@@ -213,13 +218,13 @@ namespace NmmStageMicro
                 sb.AppendLine("5 : Line width / µm");
                 sb.AppendLine("6 : Range of line widths / µm");
                 sb.AppendLine("@@@@");
-                if (result.SampleSize == 0)
+                if (resultFW.SampleSize == 0)
                 {
                     sb.AppendLine("*** No matching intensity pattern found ***");
                 }
                 else
                 {
-                    foreach (var line in result.LineMarks)
+                    foreach (var line in resultFW.LineMarks)
                     {
                         double deltaL = ThermalCorrection(line.NominalPosition);
                         sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
@@ -235,6 +240,7 @@ namespace NmmStageMicro
             {
                 sb.Append(edgesOnlyOutput);
             }
+            #endregion
 
             #region File output
             string outFileName;
@@ -283,11 +289,6 @@ namespace NmmStageMicro
             double deltaT = theData.MetaData.SampleTemperature - referenceTemperature;
             double deltaL = alpha * length * deltaT;
             return -deltaL;
-        }
-
-        private static int[] DoubleToInt(double[] rawIntensities)
-        {
-            return rawIntensities.Select(x => Convert.ToInt32(x)).ToArray();
         }
 
     }

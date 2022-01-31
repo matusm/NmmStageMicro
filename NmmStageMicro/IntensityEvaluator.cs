@@ -8,6 +8,7 @@
 //
 //*******************************************************************************************
 
+using System;
 using System.Linq;
 
 namespace NmmStageMicro
@@ -26,6 +27,8 @@ namespace NmmStageMicro
             lowerBound = FindPeak(0.0, 0.5);
             upperBound = FindPeak(0.5, 1.0);
         }
+
+        public IntensityEvaluator(double[] intensities) : this(intensities.Select(x => Convert.ToInt32(x)).ToArray()) { }
 
         public int MaxIntensity => maxIntensity;
         public int MinIntensity => minIntensity;

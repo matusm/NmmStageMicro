@@ -22,17 +22,18 @@ namespace NmmStageMicro
         {
             LeftEdgePosition = leftPos;
             RightEdgePosition = rightPos;
+            LineType = ScaleMarkType.NoMark;
             if (LeftEdgePosition < RightEdgePosition)
                 LineType = ScaleMarkType.Reflective;
-            else
+            if (LeftEdgePosition > RightEdgePosition)
                 LineType = ScaleMarkType.Transparent;
         }
 
-        public double LeftEdgePosition { get; private set; }
-        public double RightEdgePosition { get; private set; }
+        public double LeftEdgePosition { get; }
+        public double RightEdgePosition { get; }
         public double LineCenter => (LeftEdgePosition + RightEdgePosition) / 2.0;
         public double LineWidth => Math.Abs(LeftEdgePosition - RightEdgePosition);
-        public ScaleMarkType LineType { get; private set; }
+        public ScaleMarkType LineType { get; }
 
         public int CompareTo(SimpleLineMark other)
         {

@@ -23,7 +23,7 @@
 //
 // Attention! when referencing to a line other than #0, center line positions are
 // offset by the difference of the nominal values!
-// this mus be corrected for in LineScale object!
+// this must be corrected for in LineScale object!
 //
 //*******************************************************************************************
 
@@ -38,24 +38,24 @@ namespace NmmStageMicro
             SampleSize = 0;
         }
 
-        public LineMark(LineMark clone)
-        {
-            NominalPosition = clone.NominalPosition;
-            scaleType = clone.ScaleType;
-            SampleSize = clone.SampleSize;
-            Tag = clone.Tag;
-            AverageLineCenter = clone.AverageLineCenter;
-            AverageLineWidth = clone.AverageLineWidth;
-            centerMax = clone.centerMax;
-            centerMin = clone.centerMin;
-            widthMax = clone.widthMax;
-            widthMin = clone.widthMin;
-        }
+        //public LineMark(LineMark clone)
+        //{
+        //    NominalPosition = clone.NominalPosition;
+        //    scaleType = clone.ScaleType;
+        //    SampleSize = clone.SampleSize;
+        //    Tag = clone.Tag;
+        //    AverageLineCenter = clone.AverageLineCenter;
+        //    AverageLineWidth = clone.AverageLineWidth;
+        //    centerMax = clone.centerMax;
+        //    centerMin = clone.centerMin;
+        //    widthMax = clone.widthMax;
+        //    widthMin = clone.widthMin;
+        //}
 
         public double NominalPosition { get; set; }
         public ScaleMarkType ScaleType => scaleType;
         public int SampleSize { get; private set; }
-        public int Tag { get; private set; }
+        public int Tag { get; }
         public double AverageLineCenter { get; private set; }
         public double AverageLineWidth { get; private set; }
         public double LineCenterRange => centerMax - centerMin;
