@@ -118,12 +118,12 @@ namespace NmmStageMicro
                 LineDetector marks = new LineDetector(skeleton, profiles[profileIndex].Xvalues);
                 if (options.LineScale)
                 {
-                    ConsoleUI.WriteLine($"profile: {profileIndex,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
+                    ConsoleUI.WriteLine($"profile: {profileIndex+1,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
                 }
                 result.UpdateSample(marks.LineMarks, options.RefLine);
                 if (options.EdgeOnly)
                 {
-                    ConsoleUI.WriteLine($"profile: {profileIndex,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
+                    ConsoleUI.WriteLine($"profile: {profileIndex+1,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
                     EdgesOnlyOutputToStringBuilder(marks, profileIndex);
                 }
             }
