@@ -11,11 +11,11 @@ namespace NmmStageMicro
 {
     class MainClass
     {
-        static readonly Options options = new Options();
-        static NmmFileName nmmFileNameObject;
-        static NmmScanData theData;
-        static string[] fileNames;
-        static StringBuilder edgesOnlyOutput = new StringBuilder();
+        private static readonly Options options = new Options();
+        private static NmmFileName nmmFileNameObject;
+        private static NmmScanData theData;
+        private static string[] fileNames;
+        private static readonly StringBuilder edgesOnlyOutput = new StringBuilder();
 
         public static void Main(string[] args)
         {
@@ -193,9 +193,11 @@ namespace NmmStageMicro
                 sb.AppendLine("1 : Line number (tag)");
                 sb.AppendLine("2 : Nominal value / µm");
                 sb.AppendLine("3 : Position deviation / µm");
-                sb.AppendLine("4 : Range of line position values / µm");
-                sb.AppendLine("5 : Line width / µm");
-                sb.AppendLine("6 : Range of line widths / µm");
+                sb.AppendLine("4 : StdDev of line position values / µm");
+                sb.AppendLine("5 : Range of line position values / µm");
+                sb.AppendLine("6 : Line width / µm");
+                sb.AppendLine("7 : StdDev of line widths / µm");
+                sb.AppendLine("8 : Range of line widths / µm");
                 sb.AppendLine("@@@@");
                 if (result.SampleSize == 0)
                 {
@@ -209,8 +211,10 @@ namespace NmmStageMicro
                         sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
                             $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
                             $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
+                            $"{line.LineCenterStdDev.ToString(outFormater).PadLeft(10)}" +
                             $"{line.LineCenterRange.ToString(outFormater).PadLeft(10)}" +
                             $"{line.AverageLineWidth.ToString(outFormater).PadLeft(10)}" +
+                            $"{line.LineWidthStdDev.ToString(outFormater).PadLeft(10)}" +
                             $"{(line.LineWidthRange).ToString(outFormater).PadLeft(10)}");
                     }
                 }
