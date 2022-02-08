@@ -27,39 +27,32 @@
 //
 //*******************************************************************************************
 
+using At.Matus.StatisticPod;
+
 namespace NmmStageMicro
 {
-    class LineMark
+    public class LineMark
     {
+        private readonly StatisticPod stpCenter;
+        private readonly StatisticPod stpWidth;
 
         public LineMark(int tag)
         {
             Tag = tag;
-            SampleSize = 0;
+            stpCenter = new StatisticPod(tag.ToString());
+            stpWidth = new StatisticPod(tag.ToString());
         }
 
-        //public LineMark(LineMark clone)
-        //{
-        //    NominalPosition = clone.NominalPosition;
-        //    scaleType = clone.ScaleType;
-        //    SampleSize = clone.SampleSize;
-        //    Tag = clone.Tag;
-        //    AverageLineCenter = clone.AverageLineCenter;
-        //    AverageLineWidth = clone.AverageLineWidth;
-        //    centerMax = clone.centerMax;
-        //    centerMin = clone.centerMin;
-        //    widthMax = clone.widthMax;
-        //    widthMin = clone.widthMin;
-        //}
-
         public double NominalPosition { get; set; }
-        public ScaleMarkType ScaleType => scaleType;
-        public int SampleSize { get; private set; }
+        public ScaleMarkType ScaleType { get; private set; }
+        public int SampleSize => (int)stpCenter.SampleSize;
         public int Tag { get; }
-        public double AverageLineCenter { get; private set; }
-        public double AverageLineWidth { get; private set; }
-        public double LineCenterRange => centerMax - centerMin;
-        public double LineWidthRange => widthMax - widthMin;
+        public double AverageLineCenter => stpCenter.AverageValue;
+        public double AverageLineWidth => stpWidth.AverageValue;
+        public double LineCenterRange => stpCenter.Range;
+        public double LineWidthRange => stpWidth.Range;
+        public double LineCenterStdDev => stpCenter.StandardDeviation;
+        public double LineWidthStdDev => stpWidth.StandardDeviation;
         public double Deviation => AverageLineCenter - NominalPosition;
 
         public void Update(SimpleLineMark simpleLineMark)
@@ -70,35 +63,15 @@ namespace NmmStageMicro
         public void Update(SimpleLineMark simpleLineMark, SimpleLineMark referenceLineMark)
         {
             double reducedCenter = simpleLineMark.LineCenter - referenceLineMark.LineCenter;
-            SampleSize++;
-            if(SampleSize==1)
-            {
-                scaleType = simpleLineMark.LineType;
-                AverageLineCenter = reducedCenter;
-                AverageLineWidth = simpleLineMark.LineWidth;
-                centerMax = AverageLineCenter;
-                centerMin = AverageLineCenter;
-                widthMax = AverageLineWidth;
-                widthMin = AverageLineWidth;
-            }
-            AverageLineCenter += (reducedCenter - AverageLineCenter) / SampleSize;
-            AverageLineWidth += (simpleLineMark.LineWidth - AverageLineWidth) / SampleSize;
-            if (reducedCenter > centerMax) centerMax = reducedCenter;
-            if (reducedCenter < centerMin) centerMin = reducedCenter;
-            if (simpleLineMark.LineWidth > widthMax) widthMax = simpleLineMark.LineWidth;
-            if (simpleLineMark.LineWidth < widthMin) widthMin = simpleLineMark.LineWidth;
+            ScaleType = simpleLineMark.LineType;
+            stpCenter.Update(reducedCenter);
+            stpWidth.Update(simpleLineMark.LineWidth);
         }
 
         public override string ToString()
         {
             return $"LineMark {Tag}, deviation {Deviation:F3}, width {AverageLineWidth:F3}";
         }
-
-        private ScaleMarkType scaleType;
-        private double centerMax;
-        private double centerMin;
-        private double widthMin;
-        private double widthMax;
 
     }
 }

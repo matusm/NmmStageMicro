@@ -2,19 +2,18 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">anycpu</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A3D56A37-1D22-48D0-9D3D-88BB03F52231}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>NmmStageMicro</RootNamespace>
     <AssemblyName>NmmStageMicro</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|anycpu' ">
-    <Optimize>true</Optimize>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>false</Optimize>
     <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <ExternalConsole>true</ExternalConsole>
+    <ExternalConsole>false</ExternalConsole>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -23,6 +22,9 @@
     </Reference>
     <Reference Include="Bev.IO.NmmReader">
       <HintPath>..\..\Bev.IO.NmmReader\Bev.IO.NmmReader\bin\Release\Bev.IO.NmmReader.dll</HintPath>
+    </Reference>
+    <Reference Include="At.Matus.StatisticPod">
+      <HintPath>..\..\At.Matus.StatisticPod\bin\Release\At.Matus.StatisticPod.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
