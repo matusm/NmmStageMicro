@@ -6,40 +6,67 @@ using System.Linq;
 using System.Text;
 using Bev.IO.NmmReader;
 using Bev.IO.NmmReader.scan_mode;
+using CommandLine;
+using CommandLine.Text;
 
 namespace NmmStageMicro
 {
     class MainClass
     {
-        private static readonly Options options = new Options();
-        private static NmmFileName nmmFileNameObject;
-        private static NmmScanData theData;
-        private static string[] fileNames;
-        private static readonly StringBuilder edgesOnlyOutput = new StringBuilder();
 
         public static void Main(string[] args)
         {
             CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+            Parser parser = new Parser(with => with.HelpWriter = null);
+            ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
+            parserResult
+                .WithParsed<Options>(options => Run(options))
+                .WithNotParsed(errs => DisplayHelp(parserResult, errs));
+        }
 
-            // parse command line arguments
-            if (!CommandLine.Parser.Default.ParseArgumentsStrict(args, options))
-                Console.WriteLine("*** ParseArgumentsStrict returned false");
-            // consume the verbosity option
+        private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
+        {
+            string appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            foreach (var err in errs)
+            {
+                Console.WriteLine(err);
+            }
+            HelpText helpText = HelpText.AutoBuild(result, h =>
+            {
+                h.AutoVersion = false;
+                h.AdditionalNewLineAfterOption = false;
+                h.AddPreOptionsLine(" ");
+                h.AddPreOptionsLine("Program to evaluate scanning files by SIOS NMM-1 for calibrating stage micrometers using the laser focus probe. For multiple profiles the line marks are detected separatly and average position are calculated. The number of line marks must be provided (via -n option). The nominal scale divison (-d) is needed for evaluation of deviations.");
+                h.AddPreOptionsLine("");
+                h.AddPreOptionsLine($"Usage: {appName} InputPath [OutPath] [options]");
+                return HelpText.DefaultParsingErrorsHandler(result, h);
+            }, e => e);
+            Console.WriteLine(helpText);
+        }
+
+        private static Options opts = new Options();
+        private static NmmScanData theData;
+        private static readonly StringBuilder edgesOnlyOutput = new StringBuilder();
+
+        private static void SetVerbosity(Options options)
+        {
             if (options.BeQuiet == true)
                 ConsoleUI.BeSilent();
             else
                 ConsoleUI.BeVerbatim();
-            // print a welcome message
-            ConsoleUI.Welcome();
+            ConsoleUI.WriteLine(HeadingInfo.Default);
+            ConsoleUI.WriteLine(CopyrightInfo.Default);
             ConsoleUI.WriteLine();
-            // get the filename(s)
-            fileNames = options.ListOfFileNames.ToArray();
-            if (fileNames.Length == 0)
-                ConsoleUI.ErrorExit("!Missing input file name", 1);
+        }
 
-            // read all relevant scan data
+        private static void Run(Options options)
+        {
+            opts = options;
+
+            SetVerbosity(options);
+
             ConsoleUI.StartOperation("Reading NMM scan files");
-            nmmFileNameObject = new NmmFileName(fileNames[0]);
+            NmmFileName nmmFileNameObject = new NmmFileName(options.InputPath);
             nmmFileNameObject.SetScanIndex(options.ScanIndex);
             theData = new NmmScanData(nmmFileNameObject);
             ConsoleUI.Done();
@@ -60,7 +87,7 @@ namespace NmmStageMicro
             if (options.RefLine < 0) options.RefLine = 0;
             if (options.RefLine >= options.ExpectedTargets) options.RefLine = options.ExpectedTargets - 1;
 
-            // output scan files peculiaritues
+            // output scan files peculiarities
             ConsoleUI.WriteLine();
             ConsoleUI.WriteLine($"SpuriousDataLines: {theData.MetaData.SpuriousDataLines}");
             ConsoleUI.WriteLine($"NumberOfGlitchedDataPoints: {theData.MetaData.NumberOfGlitchedDataPoints}");
@@ -97,10 +124,10 @@ namespace NmmStageMicro
 
             // wraps profiles extracted from NMM files to a more abstract structure: profiles
             List<IntensityProfile> profilesList = new List<IntensityProfile>();
-            WarpNmmProfiles(TopographyProcessType.ForwardOnly, profilesList);
+            WarpNmmProfiles(options, TopographyProcessType.ForwardOnly, profilesList);
             if (theData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackward || theData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackwardJustified)
             {
-                WarpNmmProfiles(TopographyProcessType.BackwardOnly, profilesList);
+                WarpNmmProfiles(options, TopographyProcessType.BackwardOnly, profilesList);
             }
             IntensityProfile[] profiles = profilesList.ToArray();
 
@@ -118,13 +145,13 @@ namespace NmmStageMicro
                 LineDetector marks = new LineDetector(skeleton, profiles[profileIndex].Xvalues);
                 if (options.LineScale)
                 {
-                    ConsoleUI.WriteLine($"profile: {profileIndex+1,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
+                    ConsoleUI.WriteLine($"profile: {profileIndex + 1,3} with {marks.LineCount} line marks {(marks.LineCount != options.ExpectedTargets ? "*" : " ")}");
                 }
                 result.UpdateSample(marks.LineMarks, options.RefLine);
                 if (options.EdgeOnly)
                 {
-                    ConsoleUI.WriteLine($"profile: {profileIndex+1,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
-                    EdgesOnlyOutputToStringBuilder(marks, profileIndex);
+                    ConsoleUI.WriteLine($"profile: {profileIndex + 1,3} with L:{marks.LeftEdgePositions.Count} R:{marks.RightEdgePositions.Count}");
+                    EdgesOnlyOutputToStringBuilder(options, marks, profileIndex);
                 }
             }
 
@@ -132,7 +159,7 @@ namespace NmmStageMicro
             // prepare output
             string outFormater = $"F{options.Precision}";
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"{ConsoleUI.WelcomeMessage}");
+            sb.AppendLine($"{HeadingInfo.Default} {CopyrightInfo.Default}");
             sb.AppendLine($"InputFile            = {theData.MetaData.BaseFileName}");
             // section for sample specific metadata
             sb.AppendLine($"SampleIdentifier     = {theData.MetaData.SampleIdentifier}");
@@ -169,7 +196,7 @@ namespace NmmStageMicro
             if (options.LineScale)
             {
                 sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
-                double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition) - ThermalCorrection(result.LineMarks.First().NominalPosition);
+                double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition, options.Alpha) - ThermalCorrection(result.LineMarks.First().NominalPosition, options.Alpha);
                 sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} µm");
             }
             // auxiliary values 
@@ -207,7 +234,7 @@ namespace NmmStageMicro
                 {
                     foreach (var line in result.LineMarks)
                     {
-                        double deltaL = ThermalCorrection(line.NominalPosition);
+                        double deltaL = ThermalCorrection(line.NominalPosition, options.Alpha);
                         sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
                             $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
                             $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
@@ -227,11 +254,13 @@ namespace NmmStageMicro
 
             #region File output
             string outFileName;
-            if (fileNames.Length >= 2)
-                outFileName = fileNames[1]; // path and extension must be explicitely given
-            else
+            if (string.IsNullOrWhiteSpace(options.OutputPath))
             {
-                outFileName = nmmFileNameObject.GetFreeFileNameWithIndex(".prn"); // extension will be added by WriteToFile()
+                outFileName = nmmFileNameObject.GetFreeFileNameWithIndex(".prn");
+            }
+            else
+            { 
+                outFileName = options.OutputPath; 
             }
             ConsoleUI.WriteLine();
             ConsoleUI.WritingFile(outFileName);
@@ -242,7 +271,7 @@ namespace NmmStageMicro
             #endregion
         }
 
-        private static void WarpNmmProfiles(TopographyProcessType processType, List<IntensityProfile> tempList)
+        private static void WarpNmmProfiles(Options options, TopographyProcessType processType, List<IntensityProfile> tempList)
         {
             for (int profileIndex = 0; profileIndex < theData.MetaData.NumberOfProfiles; profileIndex++)
             {
@@ -255,7 +284,7 @@ namespace NmmStageMicro
             }
         }
 
-        private static void EdgesOnlyOutputToStringBuilder(LineDetector marks, int profileIndex)
+        private static void EdgesOnlyOutputToStringBuilder(Options options, LineDetector marks, int profileIndex)
         {
             List<double> leftEdges = marks.LeftEdgePositions;
             List<double> rightEdges = marks.RightEdgePositions;
@@ -265,23 +294,22 @@ namespace NmmStageMicro
             edgesOnlyOutput.AppendLine($"   Right edges ({rightEdges.Count}), position in µm");
             foreach (var edge in rightEdges)
             {
-                double deltaL = ThermalCorrection(edge);
+                double deltaL = ThermalCorrection(edge, options.Alpha);
                 edgesOnlyOutput.AppendLine($"      {edge + deltaL:F3}");
             }
             edgesOnlyOutput.AppendLine($"   Left edges ({leftEdges.Count}), position in µm");
             foreach (var edge in leftEdges)
             {
-                double deltaL = ThermalCorrection(edge);
+                double deltaL = ThermalCorrection(edge, options.Alpha);
                 edgesOnlyOutput.AppendLine($"      {edge + deltaL:F3}");
             }
         }
 
         // gives the thermal correction value for a given length (both in the same unit)
         // return value must be added to the given length to obtain the length at reference temperature
-        private static double ThermalCorrection(double length)
+        private static double ThermalCorrection(double length, double alpha)
         {
             double referenceTemperature = 20;
-            double alpha = options.Alpha;
             double deltaT = theData.MetaData.SampleTemperature - referenceTemperature;
             double deltaL = alpha * length * deltaT;
             return -deltaL;
