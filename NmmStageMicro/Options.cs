@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CommandLine;
+﻿using CommandLine;
 
 namespace NmmStageMicro
 {
@@ -43,37 +42,11 @@ namespace NmmStageMicro
 
         public bool LineScale => !EdgeOnly;
 
-        //[Value(0, Min = 1, Max = 2, Hidden=true, HelpText = "Filename")]
-        //public IList<string> ListOfFileNames { get; set; }
-
         [Value(0, MetaName = "InputPath", Required = true, HelpText = "Input file-name including path")]
         public string InputPath { get; set; }
 
         [Value(1, MetaName = "OutputPath", HelpText = "Output file-name including path")]
         public string OutputPath { get; set; }
 
-        //[HelpOption]
-        //public string GetUsage()
-        //{
-        //    string AppName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
-        //    string AppVer = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
-        //    HelpText help = new HelpText
-        //    {
-        //        Heading = new HeadingInfo(AppName, "version " + AppVer),
-        //        Copyright = new CopyrightInfo("Michael Matus", 2015),
-        //        AdditionalNewLineAfterOption = false,
-        //        AddDashesToOption = true
-        //    };
-        //    string sPre = "Program to evaluate scanning files by SIOS NMM-1 for calibrating stage micrometers using the laser focus probe. " +
-        //        "For multiple profiles the line marks are detected separatly and average position are calculated. " +
-        //        "The number of line marks must be provided (via -n option). The nominal scale divison (-d) is needed for evaluation of deviations. " +
-        //        " ";
-        //    help.AddPreOptionsLine(sPre);
-        //    help.AddPreOptionsLine("");
-        //    help.AddPreOptionsLine("Usage: " + AppName + " filename1 [filename2] [options]");
-        //    help.AddOptions(this);
-        //    return help;
-        //}
     }
 }
