@@ -186,6 +186,7 @@ namespace NmmStageMicro
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] = xData[i] * 1.0e6;
+                zData = NormalizeField(zData);
                 tempList.Add(new IntensityProfile(xData, zData));
             }
         }
