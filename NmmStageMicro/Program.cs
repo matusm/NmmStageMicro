@@ -53,6 +53,15 @@ namespace NmmStageMicro
             ConsoleUI.WriteLine();
         }
 
+        private static double[] NormalizeField(double[] field)
+        {
+            double maxValue = field.Max();
+            double minValue = field.Min();
+            if (maxValue < 1)
+                return field.Select(x => x * 1e9).ToArray();
+            return field;
+        }
+
         private static void Run(Options ops)
         {
             options = ops;
@@ -65,6 +74,7 @@ namespace NmmStageMicro
             // evaluate the intensities for ALL profiles == the whole scan field
             ConsoleUI.StartOperation("Classifying intensity data");
             double[] luminanceField = theNmmData.ExtractProfile(options.ZAxisDesignation, 0, TopographyProcessType.ForwardOnly);
+            luminanceField = NormalizeField(luminanceField);
             IntensityEvaluator eval = new IntensityEvaluator(luminanceField);
             ConsoleUI.Done();
             ConsoleUI.WriteLine($"Intensity range from {eval.MinIntensity} to {eval.MaxIntensity}");
