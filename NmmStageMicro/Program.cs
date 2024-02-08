@@ -235,9 +235,9 @@ namespace NmmStageMicro
             sb.AppendLine($"SampleSpecification  = {theNmmData.MetaData.SampleSpecification}");
             sb.AppendLine($"MeasurementDate      = {theNmmData.MetaData.CreationDate.ToString("dd-MM-yyyy")}");
             sb.AppendLine("======================");
-            for (int i = 0; i < theNmmData.MetaData.ScanComments.Count; i++)
+            for (int i = 3; i < theNmmData.MetaData.ScanComments.Count; i++)
             {
-                sb.AppendLine($"ScanComment{i + 1}         = {theNmmData.MetaData.ScanComments[i]}");
+                sb.AppendLine($"ScanComment{i + 1:D2}        = {theNmmData.MetaData.ScanComments[i]}");
             }
             sb.AppendLine("======================");
             if (options.LineScale)
@@ -258,7 +258,7 @@ namespace NmmStageMicro
             sb.AppendLine($"ScanFieldCenterY     = {theNmmData.MetaData.ScanFieldCenterY * 1000:F1} mm");
             sb.AppendLine($"ScanFieldCenterZ     = {theNmmData.MetaData.ScanFieldCenterZ * 1000:F1} mm");
             sb.AppendLine($"AngularOrientation   = {theNmmData.MetaData.ScanFieldRotation:F2}°");
-            sb.AppendLine($"ScanSpeed            = {theNmmData.MetaData.ScanSpeed} µm/s");
+            sb.AppendLine($"ScanSpeed            = {theNmmData.MetaData.ScanSpeed} m/s");
             sb.AppendLine($"ScanDuration         = {theNmmData.MetaData.ScanDuration} s");
             sb.AppendLine($"GlitchedDataPoints   = {theNmmData.MetaData.NumberOfGlitchedDataPoints}");
             sb.AppendLine($"SpuriousDataLines    = {theNmmData.MetaData.SpuriousDataLines}");
