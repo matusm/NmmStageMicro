@@ -28,7 +28,7 @@ namespace NmmStageMicro
         [Option("alpha", Default = 0.0, HelpText = "Thermal expansion coefficient in 1/K.")]
         public double Alpha { get; set; }
 
-        [Option('m', "morpho", Default = 25, HelpText = "Kernel value of morphological filter.")]
+        [Option('m', "morpho", Default = 0, HelpText = "Kernel value of morphological filter.")]
         public int Morpho { get; set; }
 
         [Option('t', "threshold", Default = 0.5, HelpText = "Threshold value for line detection.")]
