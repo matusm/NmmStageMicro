@@ -271,7 +271,7 @@ namespace NmmStageMicro
             if (options.LineScale)
             {
                 sb.AppendLine($"ReferencedToLine     = {options.RefLine}");
-                double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().NominalPosition, options.Alpha) - ThermalCorrection(result.LineMarks.First().NominalPosition, options.Alpha);
+                double maximumThermalCorrection = ThermalCorrection(result.LineMarks.Last().AverageLineCenter, options.Alpha) - ThermalCorrection(result.LineMarks.First().AverageLineCenter, options.Alpha);
                 sb.AppendLine($"MaxThermalCorrection = {maximumThermalCorrection:F3} µm");
             }
             // auxiliary values 
@@ -310,7 +310,7 @@ namespace NmmStageMicro
                 {
                     foreach (var line in result.LineMarks)
                     {
-                        double deltaL = ThermalCorrection(line.NominalPosition, options.Alpha);
+                        double deltaL = ThermalCorrection(line.AverageLineCenter, options.Alpha) - ThermalCorrection(result.LineMarks.First().AverageLineCenter, options.Alpha);
                         sb.AppendLine($"{line.Tag.ToString().PadLeft(5)}" +
                             $"{line.NominalPosition.ToString("F0").PadLeft(10)}" +
                             $"{(line.Deviation + deltaL).ToString(outFormater).PadLeft(10)}" +
