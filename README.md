@@ -7,7 +7,7 @@ A standalone command line tool that evaluates files produced by the [SIOS](https
 Text to be inserted
 
 ### Valid Input 
-During a standard scan procedure of the NMM-1 eight files are produced. However, depending on set parameters this number can change from four to virtually any number (for a multi-scan). Depending on the software version these files can even come in different syntacitc flavours. The library [Bev.IO.NmmReader](https://github.com/matusm/Bev.IO.NmmReader) takes care of all the parsing, invalid data files just produce no output. 
+During a standard scan procedure of the NMM-1 eight files are produced. However, depending on set parameters this number can change from four to virtually any number (for a multi-scan). Depending on the software version these files can even come in different syntacitc flavours. The library [At.Matus.IO.NmmReader](https://github.com/matusm/At.Matus.IO.NmmReader) takes care of all the parsing, invalid data files just produce no output. 
 
 ### Result File Format
 The output is written in a plain text file. 
@@ -51,7 +51,7 @@ NmmStageMicro inputfile [outputfile] [options]
 
 ## Dependencies  
 
-Bev.IO.NmmReader:  https://github.com/matusm/Bev.IO.NmmReader  
+At.Matus.IO.NmmReader:  https://github.com/matusm/At.Matus.IO.NmmReader  
 
 At.Matus.StatisticPod: https://github.com/matusm/At.Matus.StatisticPod
 

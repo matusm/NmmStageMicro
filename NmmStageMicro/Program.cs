@@ -4,14 +4,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Bev.IO.NmmReader;
-using Bev.IO.NmmReader.scan_mode;
+using At.Matus.IO.NmmReader;
+using At.Matus.IO.NmmReader.scan_mode;
 using CommandLine;
 using CommandLine.Text;
 
 namespace NmmStageMicro
 {
-    class MainClass
+    public class MainClass
     {
         private static Options options = new Options(); // this must be set in Run()
         private static NmmScanData theNmmData; // the complete data of the scan
@@ -27,41 +27,6 @@ namespace NmmStageMicro
                 .WithNotParsed(errs => DisplayHelp(parserResult, errs));
         }
 
-        private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
-        {
-            string appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
-            HelpText helpText = HelpText.AutoBuild(result, h =>
-            {
-                h.AutoVersion = false;
-                h.AdditionalNewLineAfterOption = false;
-                h.AddPreOptionsLine("\nProgram to evaluate scanning files by SIOS NMM-1 for calibrating stage micrometers using the laser focus probe. For multiple profiles the line marks are detected separatly and average position are calculated. The number of line marks must be provided (via -n option). The nominal scale divison (-d) is needed for evaluation of deviations.");
-                h.AddPreOptionsLine("");
-                h.AddPreOptionsLine($"Usage: {appName} InputPath [OutPath] [options]");
-                return HelpText.DefaultParsingErrorsHandler(result, h);
-            }, e => e);
-            Console.WriteLine(helpText);
-        }
-
-        private static void DisplayWelcomeAndSetVerbosity()
-        {
-            if (options.BeQuiet == true)
-                ConsoleUI.BeSilent();
-            else
-                ConsoleUI.BeVerbatim();
-            ConsoleUI.WriteLine(HeadingInfo.Default);
-            ConsoleUI.WriteLine(CopyrightInfo.Default);
-            ConsoleUI.WriteLine();
-        }
-
-        private static double[] NormalizeField(double[] field)
-        {
-            double maxValue = field.Max();
-            double minValue = field.Min();
-            if (maxValue < 1)
-                return field.Select(x => x * 1e9).ToArray();
-            return field;
-        }
-
         private static void Run(Options ops)
         {
             options = ops;
@@ -74,7 +39,7 @@ namespace NmmStageMicro
             // evaluate the intensities for ALL profiles == the whole scan field
             ConsoleUI.StartOperation("Classifying intensity data");
             double[] luminanceField = theNmmData.ExtractProfile(options.ZAxisDesignation, 0, TopographyProcessType.ForwardOnly);
-            luminanceField = NormalizeField(luminanceField);
+            luminanceField = StretchZValues(luminanceField);
             IntensityEvaluator eval = new IntensityEvaluator(luminanceField);
             ConsoleUI.Done();
             ConsoleUI.WriteLine($"Intensity range from {eval.MinIntensity} to {eval.MaxIntensity}");
@@ -186,7 +151,7 @@ namespace NmmStageMicro
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] = xData[i] * 1.0e6;
-                zData = NormalizeField(zData);
+                zData = StretchZValues(zData);
                 tempList.Add(new IntensityProfile(xData, zData));
             }
         }
@@ -343,6 +308,41 @@ namespace NmmStageMicro
             hOutFile.Write(report);
             hOutFile.Close();
             ConsoleUI.Done();
+        }
+
+        private static double[] StretchZValues(double[] field)
+        {
+            double maxValue = field.Max();
+            double minValue = field.Min();
+            if (maxValue < 1)
+                return field.Select(x => x * 1e9).ToArray();
+            return field;
+        }
+
+        private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
+        {
+            string appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
+            HelpText helpText = HelpText.AutoBuild(result, h =>
+            {
+                h.AutoVersion = false;
+                h.AdditionalNewLineAfterOption = false;
+                h.AddPreOptionsLine("\nProgram to evaluate scanning files by SIOS NMM-1 for calibrating stage micrometers using the laser focus probe. For multiple profiles the line marks are detected separatly and average position are calculated. The number of line marks must be provided (via -n option). The nominal scale divison (-d) is needed for evaluation of deviations.");
+                h.AddPreOptionsLine("");
+                h.AddPreOptionsLine($"Usage: {appName} InputPath [OutPath] [options]");
+                return HelpText.DefaultParsingErrorsHandler(result, h);
+            }, e => e);
+            Console.WriteLine(helpText);
+        }
+
+        private static void DisplayWelcomeAndSetVerbosity()
+        {
+            if (options.BeQuiet == true)
+                ConsoleUI.BeSilent();
+            else
+                ConsoleUI.BeVerbatim();
+            ConsoleUI.WriteLine(HeadingInfo.Default);
+            ConsoleUI.WriteLine(CopyrightInfo.Default);
+            ConsoleUI.WriteLine();
         }
 
     }

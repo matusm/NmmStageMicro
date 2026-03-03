@@ -7,7 +7,7 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>NmmStageMicro</RootNamespace>
     <AssemblyName>NmmStageMicro</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -17,13 +17,13 @@
     <ExternalConsole>false</ExternalConsole>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="At.Matus.IO.NmmReader">
+      <HintPath>..\..\At.Matus.IO.NmmReader\At.Matus.IO.NmmReader\bin\Release\At.Matus.IO.NmmReader.dll</HintPath>
+    </Reference>
     <Reference Include="CommandLine, Version=2.9.1.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.2.9.1\lib\net461\CommandLine.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="Bev.IO.NmmReader">
-      <HintPath>..\..\Bev.IO.NmmReader\Bev.IO.NmmReader\bin\Release\Bev.IO.NmmReader.dll</HintPath>
-    </Reference>
     <Reference Include="At.Matus.StatisticPod">
       <HintPath>..\..\At.Matus.StatisticPod\bin\Release\At.Matus.StatisticPod.dll</HintPath>
     </Reference>
