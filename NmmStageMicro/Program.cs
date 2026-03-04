@@ -1,16 +1,18 @@
-﻿using System;
+﻿using At.Matus.IO.NmmReader;
+using At.Matus.IO.NmmReader.scan_mode;
+using At.Matus.IO.NmmReader.Tools;
+using CommandLine.Text;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using At.Matus.IO.NmmReader;
-using At.Matus.IO.NmmReader.scan_mode;
-using CommandLine.Text;
 
 namespace NmmStageMicro
 {
     public partial class MainClass
     {
+        private const ReferenceTo defaultReference = ReferenceTo.LinePositive;
         private static Options options = new Options(); // this must be set in Run()
         private static NmmScanData nmmScanData; // the complete data of the scan
         private static NmmFileName nmmFileName;
@@ -24,17 +26,24 @@ namespace NmmStageMicro
             AdjustReference();
             DisplaySummary(); // TODO rename
 
-            // evaluate the intensities for ALL profiles == the whole scan field
+            // evaluate the intensities for ALL profiles == the whole scan field            
+            // we use the forward only data for this, because it is always present
             ConsoleUI.StartOperation("Classifying intensity data");
             double[] luminanceField = nmmScanData.ExtractProfile(options.ZAxisDesignation, 0, TopographyProcessType.ForwardOnly);
-            //TODO: check if stretching is needed, otherwise the histogram will be very coarse and the peaks will not be found correctly
-            //TODO: level profiles for height data!
-            luminanceField = StretchZValues(luminanceField);
-            IntensityEvaluator eval = new IntensityEvaluator(luminanceField);
+            
+            // level topography data to reduce the influence of intensity variations across the scan field
+            DataLeveling levelObject = new DataLeveling(luminanceField, nmmScanData.MetaData.NumberOfDataPoints, nmmScanData.MetaData.NumberOfProfiles);
+            double[] leveledLuminanceField = levelObject.LevelData(defaultReference);
+
+            // stretch the data to assure that the intensity values are in a range that allows a good classification of the line marks
+            // some scans have very low values, which makes it difficult to find a good threshold for the line mark classification)
+            leveledLuminanceField = StretchZValues(leveledLuminanceField);
+
+            IntensityEvaluator evaluator = new IntensityEvaluator(leveledLuminanceField);
             ConsoleUI.Done();
-            ConsoleUI.WriteLine($"Intensity range from {eval.MinIntensity} to {eval.MaxIntensity}");
-            ConsoleUI.WriteLine($"Estimated bounds from {eval.LowerBound} to {eval.UpperBound}");
-            double relativeSpan = (double)(eval.UpperBound - eval.LowerBound) / (double)(eval.MaxIntensity - eval.MinIntensity) * 100.0;
+            ConsoleUI.WriteLine($"Intensity range from {evaluator.MinIntensity} to {evaluator.MaxIntensity}");
+            ConsoleUI.WriteLine($"Estimated bounds from {evaluator.LowerBound} to {evaluator.UpperBound}");
+            double relativeSpan = (double)(evaluator.UpperBound - evaluator.LowerBound) / (double)(evaluator.MaxIntensity - evaluator.MinIntensity) * 100.0;
             ConsoleUI.WriteLine($"({relativeSpan:F0} % of full range)");
             ConsoleUI.WriteLine();
 
@@ -60,7 +69,7 @@ namespace NmmStageMicro
                     ConsoleUI.ErrorExit($"!Profile {profileIndex} invalid", 6);
                 }
                 Classifier classifier = new Classifier(profiles[profileIndex].Zvalues);
-                int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, eval.LowerBound, eval.UpperBound);
+                int[] skeleton = classifier.GetSegmentedProfile(options.Threshold, evaluator.LowerBound, evaluator.UpperBound);
                 MorphoFilter filter = new MorphoFilter(skeleton);
                 skeleton = filter.FilterWithParameter(options.Morpho);
                 LineDetector marks = new LineDetector(skeleton, profiles[profileIndex].Xvalues);
@@ -76,7 +85,7 @@ namespace NmmStageMicro
                 }
             }
 
-            string report = PrepareReport(result, eval, edgeReport);
+            string report = PrepareReport(result, evaluator, edgeReport);
             WriteReportToFile(report);
         }
 
@@ -141,6 +150,7 @@ namespace NmmStageMicro
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] = xData[i] * 1.0e6;
+                // TODO : level profile
                 zData = StretchZValues(zData);
                 tempList.Add(new IntensityProfile(xData, zData));
             }
@@ -300,13 +310,13 @@ namespace NmmStageMicro
             ConsoleUI.Done();
         }
 
+        // stretches the Z values to a range that allows a good classification of the line marks (0 - 10000)
         private static double[] StretchZValues(double[] field)
         {
             double maxValue = field.Max();
             double minValue = field.Min();
-            if (maxValue < 1)
-                return field.Select(x => x * 1e9).ToArray();
-            return field;
+            double span = maxValue - minValue;
+            return field.Select(x => 10000 * (x - minValue)/span).ToArray();
         }
 
     }

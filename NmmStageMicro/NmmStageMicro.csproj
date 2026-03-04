@@ -29,21 +29,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classifier.cs" />
-    <Compile Include="IntensityProfile.cs" />
-    <Compile Include="LineMark.cs" />
+    <Compile Include="Helpers\Classifier.cs" />
+    <Compile Include="Helpers\IntensityProfile.cs" />
+    <Compile Include="Helpers\LineMark.cs" />
     <Compile Include="ProgramMain.cs" />
-    <Compile Include="SimpleLineMark.cs" />
-    <Compile Include="LineScale.cs" />
-    <Compile Include="LineDetector.cs" />
+    <Compile Include="Helpers\SimpleLineMark.cs" />
+    <Compile Include="Helpers\LineScale.cs" />
+    <Compile Include="Helpers\LineDetector.cs" />
     <Compile Include="Program.cs">
       <IncludeInPackage>true</IncludeInPackage>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ConsoleUI.cs" />
     <Compile Include="Options.cs" />
-    <Compile Include="IntensityEvaluator.cs" />
-    <Compile Include="MorphoFilter.cs" />
+    <Compile Include="Helpers\IntensityEvaluator.cs" />
+    <Compile Include="Helpers\MorphoFilter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
