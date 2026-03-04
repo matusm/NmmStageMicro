@@ -1,31 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using At.Matus.IO.NmmReader;
 using At.Matus.IO.NmmReader.scan_mode;
-using CommandLine;
 using CommandLine.Text;
 
 namespace NmmStageMicro
 {
-    public class MainClass
+    public partial class MainClass
     {
         private static Options options = new Options(); // this must be set in Run()
-        private static NmmScanData theNmmData; // the complete data of the scan
-        private static NmmFileName theNmmFileName;
-
-        public static void Main(string[] args)
-        {
-            CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
-            Parser parser = new Parser(with => with.HelpWriter = null);
-            ParserResult<Options> parserResult = parser.ParseArguments<Options>(args);
-            parserResult
-                .WithParsed<Options>(options => Run(options))
-                .WithNotParsed(errs => DisplayHelp(parserResult, errs));
-        }
+        private static NmmScanData nmmScanData; // the complete data of the scan
+        private static NmmFileName nmmFileName;
 
         private static void Run(Options ops)
         {
@@ -38,7 +26,9 @@ namespace NmmStageMicro
 
             // evaluate the intensities for ALL profiles == the whole scan field
             ConsoleUI.StartOperation("Classifying intensity data");
-            double[] luminanceField = theNmmData.ExtractProfile(options.ZAxisDesignation, 0, TopographyProcessType.ForwardOnly);
+            double[] luminanceField = nmmScanData.ExtractProfile(options.ZAxisDesignation, 0, TopographyProcessType.ForwardOnly);
+            //TODO: check if stretching is needed, otherwise the histogram will be very coarse and the peaks will not be found correctly
+            //TODO: level profiles for height data!
             luminanceField = StretchZValues(luminanceField);
             IntensityEvaluator eval = new IntensityEvaluator(luminanceField);
             ConsoleUI.Done();
@@ -55,7 +45,7 @@ namespace NmmStageMicro
             // wraps profiles extracted from NMM files to a more abstract structure: profiles
             List<IntensityProfile> profilesList = new List<IntensityProfile>();
             WarpNmmProfiles(TopographyProcessType.ForwardOnly, profilesList);
-            if (theNmmData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackward || theNmmData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackwardJustified)
+            if (nmmScanData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackward || nmmScanData.MetaData.ScanStatus == ScanDirectionStatus.ForwardAndBackwardJustified)
             {
                 WarpNmmProfiles(TopographyProcessType.BackwardOnly, profilesList);
             }
@@ -93,11 +83,11 @@ namespace NmmStageMicro
         private static void LoadScanData()
         {
             ConsoleUI.StartOperation("Reading NMM scan files");
-            theNmmFileName = new NmmFileName(options.InputPath);               
-            theNmmFileName.SetScanIndex(options.ScanIndex);
+            nmmFileName = new NmmFileName(options.InputPath);               
+            nmmFileName.SetScanIndex(options.ScanIndex);
             try
             {
-                theNmmData = new NmmScanData(theNmmFileName);
+                nmmScanData = new NmmScanData(nmmFileName);
             }
             catch (Exception)
             {
@@ -109,13 +99,13 @@ namespace NmmStageMicro
 
         private static void CheckScanData()
         {
-            if (theNmmData.MetaData.ScanStatus == ScanDirectionStatus.Unknown)
+            if (nmmScanData.MetaData.ScanStatus == ScanDirectionStatus.Unknown)
                 ConsoleUI.ErrorExit("!Unknown scan type", 4);
-            if (theNmmData.MetaData.ScanStatus == ScanDirectionStatus.NoData)
+            if (nmmScanData.MetaData.ScanStatus == ScanDirectionStatus.NoData)
                 ConsoleUI.ErrorExit("!No scan data present", 5);
-            if (!theNmmData.ColumnPresent(options.XAxisDesignation))
+            if (!nmmScanData.ColumnPresent(options.XAxisDesignation))
                 ConsoleUI.ErrorExit($"!Requested channel {options.XAxisDesignation} not in data files", 2);
-            if (!theNmmData.ColumnPresent(options.ZAxisDesignation))
+            if (!nmmScanData.ColumnPresent(options.ZAxisDesignation))
                 ConsoleUI.ErrorExit($"!Requested channel {options.ZAxisDesignation} not in data files", 3);
         }
 
@@ -128,9 +118,9 @@ namespace NmmStageMicro
         private static void DisplaySummary()
         {
             ConsoleUI.WriteLine();
-            ConsoleUI.WriteLine($"{theNmmData.MetaData.NumberOfDataPoints} data lines with {theNmmData.MetaData.NumberOfColumnsInFile} channels, organized in {theNmmData.MetaData.NumberOfProfiles} profiles");
-            ConsoleUI.WriteLine($"SpuriousDataLines: {theNmmData.MetaData.SpuriousDataLines}");
-            ConsoleUI.WriteLine($"NumberOfGlitchedDataPoints: {theNmmData.MetaData.NumberOfGlitchedDataPoints}"); ConsoleUI.WriteLine($"x-axis channel: {options.XAxisDesignation}");
+            ConsoleUI.WriteLine($"{nmmScanData.MetaData.NumberOfDataPoints} data lines with {nmmScanData.MetaData.NumberOfColumnsInFile} channels, organized in {nmmScanData.MetaData.NumberOfProfiles} profiles");
+            ConsoleUI.WriteLine($"SpuriousDataLines: {nmmScanData.MetaData.SpuriousDataLines}");
+            ConsoleUI.WriteLine($"NumberOfGlitchedDataPoints: {nmmScanData.MetaData.NumberOfGlitchedDataPoints}"); ConsoleUI.WriteLine($"x-axis channel: {options.XAxisDesignation}");
             ConsoleUI.WriteLine($"z-axis channel: {options.ZAxisDesignation}");
             ConsoleUI.WriteLine($"Threshold: {options.Threshold}");
             ConsoleUI.WriteLine($"Morphological filter parameter: {options.Morpho}");
@@ -144,10 +134,10 @@ namespace NmmStageMicro
 
         private static void WarpNmmProfiles(TopographyProcessType processType, List<IntensityProfile> tempList)
         {
-            for (int profileIndex = 0; profileIndex < theNmmData.MetaData.NumberOfProfiles; profileIndex++)
+            for (int profileIndex = 0; profileIndex < nmmScanData.MetaData.NumberOfProfiles; profileIndex++)
             {
-                double[] xData = theNmmData.ExtractProfile(options.XAxisDesignation, profileIndex + 1, processType);
-                double[] zData = theNmmData.ExtractProfile(options.ZAxisDesignation, profileIndex + 1, processType);
+                double[] xData = nmmScanData.ExtractProfile(options.XAxisDesignation, profileIndex + 1, processType);
+                double[] zData = nmmScanData.ExtractProfile(options.ZAxisDesignation, profileIndex + 1, processType);
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] = xData[i] * 1.0e6;
@@ -161,7 +151,7 @@ namespace NmmStageMicro
             // gives the thermal correction value for a given length (both in the same unit)
             // return value must be added to the given length to obtain the length at reference temperature
             double referenceTemperature = 20;
-            double deltaT = theNmmData.MetaData.SampleTemperature - referenceTemperature;
+            double deltaT = nmmScanData.MetaData.SampleTemperature - referenceTemperature;
             double deltaL = alpha * length * deltaT;
             return -deltaL;
         }
@@ -194,15 +184,15 @@ namespace NmmStageMicro
             string outFormater = $"F{options.Precision}";
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"{HeadingInfo.Default} {CopyrightInfo.Default}");
-            sb.AppendLine($"InputFile            = {theNmmData.MetaData.BaseFileName}");
-            sb.AppendLine($"SampleIdentifier     = {theNmmData.MetaData.SampleIdentifier}");
-            sb.AppendLine($"SampleSpecies        = {theNmmData.MetaData.SampleSpecies}");
-            sb.AppendLine($"SampleSpecification  = {theNmmData.MetaData.SampleSpecification}");
-            sb.AppendLine($"MeasurementDate      = {theNmmData.MetaData.CreationDate.ToString("dd-MM-yyyy")}");
+            sb.AppendLine($"InputFile            = {nmmScanData.MetaData.BaseFileName}");
+            sb.AppendLine($"SampleIdentifier     = {nmmScanData.MetaData.SampleIdentifier}");
+            sb.AppendLine($"SampleSpecies        = {nmmScanData.MetaData.SampleSpecies}");
+            sb.AppendLine($"SampleSpecification  = {nmmScanData.MetaData.SampleSpecification}");
+            sb.AppendLine($"MeasurementDate      = {nmmScanData.MetaData.CreationDate.ToString("dd-MM-yyyy")}");
             sb.AppendLine("======================");
-            for (int i = 3; i < theNmmData.MetaData.ScanComments.Count; i++)
+            for (int i = 3; i < nmmScanData.MetaData.ScanComments.Count; i++)
             {
-                sb.AppendLine($"ScanComment{i + 1:D2}        = {theNmmData.MetaData.ScanComments[i]}");
+                sb.AppendLine($"ScanComment{i + 1:D2}        = {nmmScanData.MetaData.ScanComments[i]}");
             }
             sb.AppendLine("======================");
             if (options.LineScale)
@@ -212,22 +202,22 @@ namespace NmmStageMicro
                 sb.AppendLine($"ScaleType            = {result.ScaleType}");
             }
             sb.AppendLine($"ThermalExpansion     = {options.Alpha.ToString("E2")} 1/K");
-            sb.AppendLine($"NumberOfScans        = {theNmmData.MetaData.NumberOfScans}");
-            sb.AppendLine($"ScanIndex            = {theNmmData.MetaData.ScanIndex}");
-            sb.AppendLine($"PointsPerProfile     = {theNmmData.MetaData.NumberOfDataPoints}");
-            sb.AppendLine($"Profiles             = {theNmmData.MetaData.NumberOfProfiles}");
-            sb.AppendLine($"InputChannels        = {theNmmData.MetaData.NumberOfColumnsInFile}");
-            sb.AppendLine($"PointSpacing         = {(theNmmData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} µm");
-            sb.AppendLine($"ProfileSpacing       = {(theNmmData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} µm");
-            sb.AppendLine($"ScanFieldCenterX     = {theNmmData.MetaData.ScanFieldCenterX * 1000:F1} mm");
-            sb.AppendLine($"ScanFieldCenterY     = {theNmmData.MetaData.ScanFieldCenterY * 1000:F1} mm");
-            sb.AppendLine($"ScanFieldCenterZ     = {theNmmData.MetaData.ScanFieldCenterZ * 1000:F1} mm");
-            sb.AppendLine($"AngularOrientation   = {theNmmData.MetaData.ScanFieldRotation:F2}°");
-            sb.AppendLine($"ScanSpeed            = {theNmmData.MetaData.ScanSpeed} m/s");
-            sb.AppendLine($"ScanDuration         = {theNmmData.MetaData.ScanDuration} s");
-            sb.AppendLine($"GlitchedDataPoints   = {theNmmData.MetaData.NumberOfGlitchedDataPoints}");
-            sb.AppendLine($"SpuriousDataLines    = {theNmmData.MetaData.SpuriousDataLines}");
-            sb.AppendLine($"Probe                = {theNmmData.MetaData.ProbeDesignation}");
+            sb.AppendLine($"NumberOfScans        = {nmmScanData.MetaData.NumberOfScans}");
+            sb.AppendLine($"ScanIndex            = {nmmScanData.MetaData.ScanIndex}");
+            sb.AppendLine($"PointsPerProfile     = {nmmScanData.MetaData.NumberOfDataPoints}");
+            sb.AppendLine($"Profiles             = {nmmScanData.MetaData.NumberOfProfiles}");
+            sb.AppendLine($"InputChannels        = {nmmScanData.MetaData.NumberOfColumnsInFile}");
+            sb.AppendLine($"PointSpacing         = {(nmmScanData.MetaData.ScanFieldDeltaX * 1e6).ToString("F4")} µm");
+            sb.AppendLine($"ProfileSpacing       = {(nmmScanData.MetaData.ScanFieldDeltaY * 1e6).ToString("F4")} µm");
+            sb.AppendLine($"ScanFieldCenterX     = {nmmScanData.MetaData.ScanFieldCenterX * 1000:F1} mm");
+            sb.AppendLine($"ScanFieldCenterY     = {nmmScanData.MetaData.ScanFieldCenterY * 1000:F1} mm");
+            sb.AppendLine($"ScanFieldCenterZ     = {nmmScanData.MetaData.ScanFieldCenterZ * 1000:F1} mm");
+            sb.AppendLine($"AngularOrientation   = {nmmScanData.MetaData.ScanFieldRotation:F2}°");
+            sb.AppendLine($"ScanSpeed            = {nmmScanData.MetaData.ScanSpeed} m/s");
+            sb.AppendLine($"ScanDuration         = {nmmScanData.MetaData.ScanDuration} s");
+            sb.AppendLine($"GlitchedDataPoints   = {nmmScanData.MetaData.NumberOfGlitchedDataPoints}");
+            sb.AppendLine($"SpuriousDataLines    = {nmmScanData.MetaData.SpuriousDataLines}");
+            sb.AppendLine($"Probe                = {nmmScanData.MetaData.ProbeDesignation}");
             // evaluation parameters, user supplied
             sb.AppendLine($"X-AxisChannel        = {options.XAxisDesignation}");
             sb.AppendLine($"Z-AxisChannel        = {options.ZAxisDesignation}");
@@ -251,10 +241,10 @@ namespace NmmStageMicro
                 sb.AppendLine($"EvaluatedProfiles    = {result.SampleSize}");
             }
             // environmental data
-            sb.AppendLine($"SampleTemperature    = {theNmmData.MetaData.SampleTemperature.ToString("F3")} °C");
-            sb.AppendLine($"AirTemperature       = {theNmmData.MetaData.AirTemperature.ToString("F3")} °C");
-            sb.AppendLine($"AirPressure          = {theNmmData.MetaData.BarometricPressure.ToString("F0")} Pa");
-            sb.AppendLine($"AirHumidity          = {theNmmData.MetaData.RelativeHumidity.ToString("F1")} %");
+            sb.AppendLine($"SampleTemperature    = {nmmScanData.MetaData.SampleTemperature.ToString("F3")} °C");
+            sb.AppendLine($"AirTemperature       = {nmmScanData.MetaData.AirTemperature.ToString("F3")} °C");
+            sb.AppendLine($"AirPressure          = {nmmScanData.MetaData.BarometricPressure.ToString("F0")} Pa");
+            sb.AppendLine($"AirHumidity          = {nmmScanData.MetaData.RelativeHumidity.ToString("F1")} %");
             sb.AppendLine("======================");
             if (options.LineScale)
             {
@@ -296,7 +286,7 @@ namespace NmmStageMicro
             string outFileName;
             if (string.IsNullOrWhiteSpace(options.OutputPath))
             {
-                outFileName = theNmmFileName.GetFreeFileNameWithIndex(".prn");
+                outFileName = nmmFileName.GetFreeFileNameWithIndex(".prn");
             }
             else
             {
@@ -317,32 +307,6 @@ namespace NmmStageMicro
             if (maxValue < 1)
                 return field.Select(x => x * 1e9).ToArray();
             return field;
-        }
-
-        private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
-        {
-            string appName = System.Reflection.Assembly.GetExecutingAssembly().GetName().Name;
-            HelpText helpText = HelpText.AutoBuild(result, h =>
-            {
-                h.AutoVersion = false;
-                h.AdditionalNewLineAfterOption = false;
-                h.AddPreOptionsLine("\nProgram to evaluate scanning files by SIOS NMM-1 for calibrating stage micrometers using the laser focus probe. For multiple profiles the line marks are detected separatly and average position are calculated. The number of line marks must be provided (via -n option). The nominal scale divison (-d) is needed for evaluation of deviations.");
-                h.AddPreOptionsLine("");
-                h.AddPreOptionsLine($"Usage: {appName} InputPath [OutPath] [options]");
-                return HelpText.DefaultParsingErrorsHandler(result, h);
-            }, e => e);
-            Console.WriteLine(helpText);
-        }
-
-        private static void DisplayWelcomeAndSetVerbosity()
-        {
-            if (options.BeQuiet == true)
-                ConsoleUI.BeSilent();
-            else
-                ConsoleUI.BeVerbatim();
-            ConsoleUI.WriteLine(HeadingInfo.Default);
-            ConsoleUI.WriteLine(CopyrightInfo.Default);
-            ConsoleUI.WriteLine();
         }
 
     }

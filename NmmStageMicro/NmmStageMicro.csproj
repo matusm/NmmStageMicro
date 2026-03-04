@@ -32,6 +32,7 @@
     <Compile Include="Classifier.cs" />
     <Compile Include="IntensityProfile.cs" />
     <Compile Include="LineMark.cs" />
+    <Compile Include="ProgramMain.cs" />
     <Compile Include="SimpleLineMark.cs" />
     <Compile Include="LineScale.cs" />
     <Compile Include="LineDetector.cs" />
