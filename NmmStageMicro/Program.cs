@@ -12,7 +12,6 @@ namespace NmmStageMicro
 {
     public partial class MainClass
     {
-        private const ReferenceTo defaultReference = ReferenceTo.LinePositive;
         private static Options options = new Options(); // this must be set in Run()
         private static NmmScanData nmmScanData; // the complete data of the scan
         private static NmmFileName nmmFileName;
@@ -23,7 +22,7 @@ namespace NmmStageMicro
             DisplayWelcomeAndSetVerbosity();
             LoadScanData();
             CheckScanData();
-            AdjustReference();
+            ClampReferenceLine();
             DisplaySummary(); // TODO rename
 
             // evaluate the intensities for ALL profiles == the whole scan field            
@@ -33,7 +32,7 @@ namespace NmmStageMicro
             
             // level topography data to reduce the influence of intensity variations across the scan field
             DataLeveling levelObject = new DataLeveling(luminanceField, nmmScanData.MetaData.NumberOfDataPoints, nmmScanData.MetaData.NumberOfProfiles);
-            double[] leveledLuminanceField = levelObject.LevelData(defaultReference);
+            double[] leveledLuminanceField = levelObject.LevelData(options.ReferenceType);
 
             // stretch the data to assure that the intensity values are in a range that allows a good classification of the line marks
             // some scans have very low values, which makes it difficult to find a good threshold for the line mark classification)
@@ -41,13 +40,15 @@ namespace NmmStageMicro
 
             IntensityEvaluator evaluator = new IntensityEvaluator(leveledLuminanceField);
             ConsoleUI.Done();
+
+
             ConsoleUI.WriteLine($"Intensity range from {evaluator.MinIntensity} to {evaluator.MaxIntensity}");
             ConsoleUI.WriteLine($"Estimated bounds from {evaluator.LowerBound} to {evaluator.UpperBound}");
             double relativeSpan = (double)(evaluator.UpperBound - evaluator.LowerBound) / (double)(evaluator.MaxIntensity - evaluator.MinIntensity) * 100.0;
             ConsoleUI.WriteLine($"({relativeSpan:F0} % of full range)");
             ConsoleUI.WriteLine();
 
-            // prepare object for the overall dimensional result
+            // prepare LineScale object for the overall dimensional result
             LineScale result = new LineScale(options.ExpectedTargets);
             result.SetNominalValues(options.NominalDivision, options.RefLine);
 
@@ -118,7 +119,7 @@ namespace NmmStageMicro
                 ConsoleUI.ErrorExit($"!Requested channel {options.ZAxisDesignation} not in data files", 3);
         }
 
-        private static void AdjustReference()
+        private static void ClampReferenceLine()
         {
             if (options.RefLine < 0) options.RefLine = 0;
             if (options.RefLine >= options.ExpectedTargets) options.RefLine = options.ExpectedTargets - 1;
@@ -146,13 +147,15 @@ namespace NmmStageMicro
             for (int profileIndex = 0; profileIndex < nmmScanData.MetaData.NumberOfProfiles; profileIndex++)
             {
                 double[] xData = nmmScanData.ExtractProfile(options.XAxisDesignation, profileIndex + 1, processType);
-                double[] zData = nmmScanData.ExtractProfile(options.ZAxisDesignation, profileIndex + 1, processType);
                 // convert Xdata from meter to micrometer
                 for (int i = 0; i < xData.Length; i++)
                     xData[i] = xData[i] * 1.0e6;
-                // TODO : level profile
-                zData = StretchZValues(zData);
-                tempList.Add(new IntensityProfile(xData, zData));
+                // level profile
+                double[] zData = nmmScanData.ExtractProfile(options.ZAxisDesignation, profileIndex + 1, processType);
+                DataLeveling levelObject = new DataLeveling(zData, nmmScanData.MetaData.NumberOfDataPoints);
+                double[] leveledZData = levelObject.LevelData(options.ReferenceType);
+                leveledZData = StretchZValues(leveledZData);
+                tempList.Add(new IntensityProfile(xData, leveledZData));
             }
         }
 

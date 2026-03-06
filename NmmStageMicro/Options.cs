@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using At.Matus.IO.NmmReader.Tools;
+using CommandLine;
 
 namespace NmmStageMicro
 {
@@ -34,6 +35,9 @@ namespace NmmStageMicro
         [Option('t', "threshold", Default = 0.5, HelpText = "Threshold value for line detection.")]
         public double Threshold { get; set; }
 
+        [Option('l', "level", HelpText = "Level profiles prior to analysis.")]
+        public bool Level { get; set; }
+
         [Option('q', "quiet", HelpText = "Quiet mode. No screen output (except for errors).")]
         public bool BeQuiet { get; set; }
 
@@ -41,6 +45,8 @@ namespace NmmStageMicro
         public bool EdgeOnly { get; set; }
 
         public bool LineScale => !EdgeOnly;
+
+        public ReferenceTo ReferenceType => Level ? ReferenceTo.LinePositive : ReferenceTo.None;
 
         [Value(0, MetaName = "InputPath", Required = true, HelpText = "Input file-name including path")]
         public string InputPath { get; set; }
