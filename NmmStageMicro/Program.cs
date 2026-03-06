@@ -155,7 +155,8 @@ namespace NmmStageMicro
                 DataLeveling levelObject = new DataLeveling(zData, nmmScanData.MetaData.NumberOfDataPoints);
                 double[] leveledZData = levelObject.LevelData(options.ReferenceType);
                 leveledZData = StretchZValues(leveledZData);
-                tempList.Add(new IntensityProfile(xData, leveledZData));
+                IntensityProfile ip = new IntensityProfile(xData, leveledZData);
+                tempList.Add(ip);
             }
         }
 

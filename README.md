@@ -1,19 +1,19 @@
 NmmStageMicro
 =============
 
-A standalone command line tool that evaluates files produced by the [SIOS](https://sios-de.com) NMM-1 for calibrating stage micrometers using the laser focus probe. The results are written to an ASCII text file.
+A standalone command line tool that evaluates files produced by the [SIOS](https://sios-de.com) NMM for calibrating stage micrometers using the laser focus probe. The results are written to an ASCII text file.
 
 ## Functionality
 Text to be inserted
 
 ### Valid Input 
-During a standard scan procedure of the NMM-1 eight files are produced. However, depending on set parameters this number can change from four to virtually any number (for a multi-scan). Depending on the software version these files can even come in different syntacitc flavours. The library [At.Matus.IO.NmmReader](https://github.com/matusm/At.Matus.IO.NmmReader) takes care of all the parsing, invalid data files just produce no output. 
+During a standard scan procedure of the NMM-1 eight files are produced. However, depending on set parameters this number can change from four to virtually any number (for a multi-scan). Depending on the software version these files can even come in different syntactic flavours. The library [At.Matus.IO.NmmReader](https://github.com/matusm/At.Matus.IO.NmmReader) takes care of all the parsing, invalid data files just produce no output. 
 
 ### Result File Format
 The output is written in a plain text file. 
 
 ### Line Detection Algorithm
-Text to be inserted
+TBI
 
 ## Command Line Usage:
 
@@ -39,6 +39,8 @@ NmmStageMicro inputfile [outputfile] [options]
 
 `--reference (-r)` : Defines the zero line mark.
 
+`--level (-l)` : Level profiles prior to analysis.
+
 `--morpho (-m)` : Kernel value for the morphological filter. Positve values causes erosion followed by dilatation. Negative values causes dilatation followed by erosion.
 
 `--threshold (-t)` : Threshold value for edge detection. Default value is 0.5.
@@ -49,11 +51,14 @@ NmmStageMicro inputfile [outputfile] [options]
 
 `--help` : Display a help screen.
 
-## Dependencies  
+## Dependencies and Acknowledgments 
 
 At.Matus.IO.NmmReader:  https://github.com/matusm/At.Matus.IO.NmmReader  
 
 At.Matus.StatisticPod: https://github.com/matusm/At.Matus.StatisticPod
 
 CommandLineParser: https://github.com/commandlineparser/commandline 
+
+---
+**Note**: This tool is not officially affiliated with or endorsed by SIOS Meßtechnik GmbH.
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 
 namespace NmmStageMicro
@@ -31,5 +32,13 @@ namespace NmmStageMicro
             if (Xvalues == null) return "[null]";
             return $"[Xvalues:{Xvalues.Length} Yvalues:{Zvalues.Length}]";
         }
+
+        //internal void DebugCsvOutput(string filename)
+        //{
+        //    if (ProfileIsValid())
+        //        using (StreamWriter file = new StreamWriter(filename))
+        //            for (int i = 0; i < Xvalues.Length; i++)
+        //                file.WriteLine($"{Xvalues[i]}, {Zvalues[i]}");
+        //}
     }
 }
