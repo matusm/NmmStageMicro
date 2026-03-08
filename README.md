@@ -4,7 +4,7 @@ NmmStageMicro
 A standalone command line tool that evaluates files produced by the [SIOS](https://sios-de.com) NMM for calibrating stage micrometers using the laser focus probe. The results are written to an ASCII text file.
 
 ## Functionality
-Text to be inserted
+TBI
 
 ### Valid Input 
 During a standard scan procedure of the NMM-1 eight files are produced. However, depending on set parameters this number can change from four to virtually any number (for a multi-scan). Depending on the software version these files can even come in different syntactic flavours. The library [At.Matus.IO.NmmReader](https://github.com/matusm/At.Matus.IO.NmmReader) takes care of all the parsing, invalid data files just produce no output. 
