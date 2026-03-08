@@ -7,7 +7,7 @@ A standalone command line tool that evaluates files produced by the [SIOS](https
 TBI
 
 ### Valid Input 
-During a standard scan procedure of the NMM-1 eight files are produced. However, depending on set parameters this number can change from four to virtually any number (for a multi-scan). Depending on the software version these files can even come in different syntactic flavours. The library [At.Matus.IO.NmmReader](https://github.com/matusm/At.Matus.IO.NmmReader) takes care of all the parsing, invalid data files just produce no output. 
+During a standard scan procedure of the NMM-1 eight files are produced. However, depending on set parameters this number can change from four to virtually any number (for a multi-scan). Depending on the software version these files can even come in different syntactic flavours. The library [At.Matus.IO.NmmReader](https://github.com/matusm/At.Matus.IO.NmmReader) takes care of all the parsing, invalid data files just produce no output at all. 
 
 ### Result File Format
 The output is written in a plain text file. 
@@ -51,14 +51,14 @@ NmmStageMicro inputfile [outputfile] [options]
 
 `--help` : Display a help screen.
 
+### Installation
+If you do not want to build the application from the source code you can use the released binaries. Just copy the .exe and the .dll files to a directory of your choice. This direcory should be included in the user's PATH variable.
+
 ## Dependencies and Acknowledgments 
-
-At.Matus.IO.NmmReader:  https://github.com/matusm/At.Matus.IO.NmmReader  
-
-At.Matus.StatisticPod: https://github.com/matusm/At.Matus.StatisticPod
-
-CommandLineParser: https://github.com/commandlineparser/commandline 
+* [At.Matus.IO.NmmReader](https://github.com/matusm/At.Matus.IO.NmmReader)  
+* [At.Matus.StatisticPod](https://github.com/matusm/At.Matus.StatisticPod)
+* [CommandLineParser](https://github.com/commandlineparser/commandline)
+* [Math.NET numerics](https://numerics.mathdotnet.com)
 
 ---
 **Note**: This tool is not officially affiliated with or endorsed by SIOS Meßtechnik GmbH.
-
